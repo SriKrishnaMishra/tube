@@ -1,0 +1,102 @@
+# Backlink campaign configuration — QHT Clinic & URoots
+# Single source of truth for the rules in docs/SOP.md. Scripts read this file.
+# Anything marked "[SEO lead to set:" is a placeholder that needs a human decision.
+
+campaign:
+  name: "QHT Clinic & URoots bulk backlink campaigns"
+  timezone: "Asia/Kolkata"        # [SEO lead to set: confirm]
+  verification_days: 7            # Step 8: re-check links posted_date + 7 days
+
+brands:
+  qht-clinic:
+    display_name: "QHT Clinic"
+    website: "[SEO lead to set: e.g. https://qhtclinic.com]"
+    asset_kit_dir: "asset-kit/qht-clinic"
+    kit_approved: false           # flip to true when Step 1 is signed off (doctor review included)
+  uroots:
+    display_name: "URoots"
+    website: "[SEO lead to set: e.g. https://uroots.com]"
+    asset_kit_dir: "asset-kit/uroots"
+    kit_approved: false
+
+tracker:
+  path: "tracker/backlinks_tracker.xlsx"
+  sheet: "Backlinks"
+  required_columns:               # Section 3 — validate with scripts/checklist.py validate
+    - Brand
+    - Site / URL
+    - Decision
+    - Week order
+    - Target page
+    - Anchor
+    - Anchor type
+    - Word count
+    - Link type
+    - Dofollow / Nofollow
+    - Status
+    - Live URL
+    - Date posted
+    - Verify on
+    - Verified date
+    - Account login
+    - Notes
+
+decisions: ["Do first", "Do short", "Hold", "Skip"]     # pick_next priority order = this order
+statuses: ["Not started", "In progress", "Submitted", "Live", "Hold", "Skip", "Removed"]
+link_types: ["Profile", "Directory", "Guest post", "Citation"]
+link_attributes: ["Dofollow", "Nofollow", "Unknown"]
+word_count_modes:                 # tracker "Word count" column values -> guidance
+  "Short profile": {min: 50,  max: 150}
+  "Short blog":    {min: 300, max: 600}
+  "Full article":  {min: 800, max: 1500}
+
+# Step 5 anchor mix target (Section 4). weekly_review.py measures actual vs. target.
+anchor_mix_target:
+  brand: 0.40
+  partial_keyword: 0.30
+  plain_url: 0.20
+  generic: 0.10
+drift_tolerance_pp: 10            # [SEO lead to set: flag if any bucket is >N percentage points off]
+
+site_quality:                     # Step 3 minimum bar
+  min_domain_rating: null         # [SEO lead to set: e.g. DR >= 30]
+  min_traffic: null               # [SEO lead to set: e.g. >= 1000 monthly visits]
+  must_be_indexed_in_google: true
+  reject_topics: ["casino", "gambling", "adult", "pharma grey market", "link farm", "PBN"]
+
+legal_gate:                       # Step 4 — enforced by scripts/legal_gate.py
+  rx_terms:                       # prescription medicines: doctor + legal sign-off, mark Hold
+    - minoxidil                   # note: OTC in some markets; kept here per SOP wording
+    - finasteride
+    - dutasteride
+    - spironolactone
+    - bimatoprost
+    - corticosteroid
+    - cyclosporine
+    - azathioprine
+    - oral minoxidil
+    - "M2K"                        # [SEO lead to set: confirm combo Rx names]
+  competitor_brands:              # naming a competitor -> legal review, mark Hold
+    - traya
+    - man matters
+    - bodywise
+    - "holistic"                  # [SEO lead to set: add/remove Indian hair-health competitors]
+    - "principles"
+  prohibited_claims:              # never allowed, factual language only
+    - "cure"
+    - "cures"
+    - "guaranteed"
+    - "guarantee"
+    - "100% result"
+    - "before and after"
+    - "miracle"
+    - "instant regrowth"
+    - "no side effects"
+
+outreach:
+  drafts_dir: "data/outreach-drafts"
+  send_enabled: false             # NEVER auto-send. SEO lead approves and sends manually.
+
+security:
+  password_manager: "shared vault (name: [SEO lead to set])"
+  forbidden_in_tracker: ["password", "pwd", "secret", "otp"]   # checklist.py scans for these
