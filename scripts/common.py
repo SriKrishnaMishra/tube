@@ -117,7 +117,14 @@ class Tracker:
         self.ws.cell(row=row, column=self.col(name)).value = value
 
     def append(self, values: dict) -> int:
-        r = self.ws.max_row + 1
+        # ws.max_row can over-report after styling (blank styled rows), which
+        # would leave a gap; scan for the true last data row instead.
+        r = 1
+        for rr in range(2, self.ws.max_row + 1):
+            if any(self.ws.cell(row=rr, column=c).value not in (None, "")
+                   for c in range(1, len(self.headers) + 1)):
+                r = rr
+        r += 1
         for k, v in values.items():
             self.set(r, k, v)
         return r

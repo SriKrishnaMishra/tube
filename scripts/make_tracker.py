@@ -52,12 +52,26 @@ def main() -> int:
         return 1
 
     if args.seed:
+        # Map CSV columns by position to the tracker's required columns.
+        # (Header names can be miscounted when a row has extra/missing commas;
+        #  Section 3 defines these columns in order, so positional mapping is safe.)
         with open(args.seed, newline="", encoding="utf-8") as f:
-            for rec in csv.DictReader(f):
-                values = {norm_header(k): v for k, v in rec.items() if norm_header(k) in tr.headers}
-                values.setdefault("Status", "Not started")
+            reader = csv.reader(f)
+            header = [norm_header(h) for h in next(reader)]
+            unknown = [h for h in header if h not in tr.headers]
+            if unknown:
+                print(f"WARN  ignoring unknown CSV columns: {unknown}")
+            imported = 0
+            for rec in reader:
+                if not any(cell.strip() for cell in rec):
+                    continue
+                values = {name: (rec[i].strip() if i < len(rec) else "")
+                          for i, name in enumerate(header) if name in tr.headers}
+                if not values.get("Status"):
+                    values["Status"] = "Not started"
                 tr.append(values)
-        print(f"Imported rows from {args.seed}")
+                imported += 1
+        print(f"Imported {imported} rows from {args.seed}")
     elif not args.no_seed:
         for ex in EXAMPLE_ROWS:
             tr.append(ex)
