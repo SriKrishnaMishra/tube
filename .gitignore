@@ -5,3 +5,7 @@ __pycache__/
 data/outreach-drafts/*.md
 !data/outreach-drafts/.gitkeep
 screenshots/
+node_modules
+.env
+cloudflared.exe
+

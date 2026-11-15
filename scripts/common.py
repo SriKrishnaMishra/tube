@@ -8,8 +8,21 @@ from __future__ import annotations
 
 import datetime as _dt
 import re
+import sys
 from pathlib import Path
 from typing import Iterable, Optional
+
+# Ensure standard output can handle Unicode symbols on Windows
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 import yaml
 from openpyxl import Workbook, load_workbook

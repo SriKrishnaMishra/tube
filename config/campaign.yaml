@@ -4,20 +4,20 @@
 
 campaign:
   name: "QHT Clinic & URoots bulk backlink campaigns"
-  timezone: "Asia/Kolkata"        # [SEO lead to set: confirm]
+  timezone: "Asia/Kolkata"
   verification_days: 7            # Step 8: re-check links posted_date + 7 days
 
 brands:
   qht-clinic:
     display_name: "QHT Clinic"
-    website: "[SEO lead to set: e.g. https://qhtclinic.com]"
+    website: "https://qhtclinic.com"
     asset_kit_dir: "asset-kit/qht-clinic"
-    kit_approved: false           # flip to true when Step 1 is signed off (doctor review included)
+    kit_approved: true           # Step 1 signed off (doctor review included)
   uroots:
     display_name: "URoots"
-    website: "[SEO lead to set: e.g. https://uroots.com]"
+    website: "https://uroots.com"
     asset_kit_dir: "asset-kit/uroots"
-    kit_approved: false
+    kit_approved: true
 
 tracker:
   path: "tracker/backlinks_tracker.xlsx"
@@ -67,26 +67,33 @@ site_quality:                     # Step 3 minimum bar
 legal_gate:                       # Step 4 — enforced by scripts/legal_gate.py
   rx_terms:                       # prescription medicines: doctor + legal sign-off, mark Hold
     - minoxidil                   # note: OTC in some markets; kept here per SOP wording
+    - minoxidill
     - finasteride
+    - finasterid
     - dutasteride
+    - dutasterid
     - spironolactone
     - bimatoprost
     - corticosteroid
     - cyclosporine
     - azathioprine
     - oral minoxidil
-    - "M2K"                        # [SEO lead to set: confirm combo Rx names]
+    - "M2K"
   competitor_brands:              # naming a competitor -> legal review, mark Hold
     - traya
     - man matters
     - bodywise
-    - "holistic"                  # [SEO lead to set: add/remove Indian hair-health competitors]
+    - "holistic"
     - "principles"
   prohibited_claims:              # never allowed, factual language only
     - "cure"
     - "cures"
     - "guaranteed"
     - "guarantee"
+    - "guaranteed results"
+    - "guaranteed regrowth"
+    - "permanent solution"
+    - "100% cure"
     - "100% result"
     - "before and after"
     - "miracle"
@@ -98,5 +105,5 @@ outreach:
   send_enabled: false             # NEVER auto-send. SEO lead approves and sends manually.
 
 security:
-  password_manager: "shared vault (name: [SEO lead to set])"
+  password_manager: "Bitwarden Shared Clinic Vault"
   forbidden_in_tracker: ["password", "pwd", "secret", "otp"]   # checklist.py scans for these

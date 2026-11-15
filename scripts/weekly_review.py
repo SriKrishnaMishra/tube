@@ -35,6 +35,38 @@ def posted_date(tr, r):
     return parse_date(str(v).split()[0]) if v else None
 
 
+def compute_metrics(tr: Tracker, cfg: dict, week_arg: str | None = None) -> dict:
+    """Compute structured metrics for API and reporting."""
+    start, end, label = week_bounds(week_arg)
+    brands = [b["display_name"] for b in cfg["brands"].values()]
+    live_rows = [r for r in tr.data_rows() if str(tr.get(r, "Status")) == "Live"]
+    all_active = [r for r in tr.data_rows() if str(tr.get(r, "Status")) in ("Live", "Submitted")]
+    this_week = [r for r in live_rows if posted_date(tr, r) and start <= posted_date(tr, r) <= end]
+
+    by_brand = dict(Counter(str(tr.get(r, "Brand")) for r in this_week))
+    by_type = dict(Counter(str(tr.get(r, "Link type") or "?") for r in this_week))
+    total_live_by_brand = {b: sum(1 for r in live_rows if str(tr.get(r, "Brand")) == b) for b in brands}
+
+    removed = [r for r in tr.data_rows() if str(tr.get(r, "Status")) == "Removed"]
+    cats = Counter(classify_anchor(str(tr.get(r, "Anchor") or ""), brands) for r in all_active)
+    total_anchors = sum(cats.values()) or 1
+    anchor_mix = {k: round(cats.get(k, 0) / total_anchors, 2) for k in ("brand", "partial_keyword", "plain_url", "generic")}
+
+    return {
+        "week_label": label,
+        "week_start": start.isoformat(),
+        "week_end": end.isoformat(),
+        "live_this_week_count": len(this_week),
+        "live_this_week_by_brand": by_brand,
+        "live_this_week_by_type": by_type,
+        "total_live": len(live_rows),
+        "total_live_by_brand": total_live_by_brand,
+        "removed_count": len(removed),
+        "anchor_mix_actual": anchor_mix,
+        "anchor_mix_target": cfg.get("anchor_mix_target", {}),
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--week", help="ISO week like 2026-45 (default: current)")

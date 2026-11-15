@@ -25,7 +25,8 @@ def check_kit(cfg) -> bool:
     ok = True
     for key, brand in cfg["brands"].items():
         d = REPO_ROOT / brand["asset_kit_dir"]
-        md = sorted(d.glob("*.md"))
+        non_templates = [p for p in d.glob("*.md") if not p.name.endswith("_TEMPLATE.md")]
+        md = non_templates if non_templates else sorted(d.glob("*.md"))
         text = "\n".join(p.read_text(encoding="utf-8") for p in md) if md else ""
         missing = [f for f in KIT_FIELDS if not re.search(re.escape(f) + r"\s*[:=]", text)]
         unfilled = [f for f in KIT_FIELDS if re.search(re.escape(f) + r"\s*[:=]\s*(TBD|\[|\{\{|>)", text)]

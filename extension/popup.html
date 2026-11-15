@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecTracker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-mark">⚡</div>
+        <div>
+          <span class="logo-title">RecTracker</span>
+          <span class="logo-sub">AI-Powered</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="icon-btn" title="Toggle theme">◐</button>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+      <button class="tab" data-tab="videos">🎬 Videos</button>
+      <button class="tab" data-tab="blocking">🛡️ Blocking</button>
+      <button class="tab" data-tab="settings">⚙️ Settings</button>
+    </nav>
+
+    <main>
+      <!-- Dashboard Panel -->
+      <section class="panel active" id="panel-dashboard">
+        <!-- Stats Grid -->
+        <div class="stat-grid">
+          <div class="stat-card stat-indigo">
+            <div class="stat-icon">🎥</div>
+            <div class="stat-info">
+              <div class="stat-label">Videos Tracked</div>
+              <div class="stat-value" id="statTotal">—</div>
+            </div>
+          </div>
+          <div class="stat-card stat-purple">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-info">
+              <div class="stat-label">Watch Time</div>
+              <div class="stat-value" id="statWatchTime">—</div>
+            </div>
+          </div>
+          <div class="stat-card stat-emerald">
+            <div class="stat-icon">📺</div>
+            <div class="stat-info">
+              <div class="stat-label">Channels</div>
+              <div class="stat-value" id="statChannels">—</div>
+            </div>
+          </div>
+          <div class="stat-card stat-amber">
+            <div class="stat-icon">🛡️</div>
+            <div class="stat-info">
+              <div class="stat-label">Blocked</div>
+              <div class="stat-value" id="statBlocked">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📂 Categories</div>
+            <span class="card-badge" id="categoryCount">0</span>
+          </div>
+          <div id="categoriesList" class="tag-list"></div>
+        </div>
+
+        <!-- Top Channels -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🏆 Top Channels</div>
+          </div>
+          <div id="topChannels" class="channel-list"></div>
+        </div>
+
+        <!-- Recent Videos -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🕐 Recent Videos</div>
+            <button id="viewAllBtn" class="link-btn">View All →</button>
+          </div>
+          <div id="recentVideos" class="video-list"></div>
+        </div>
+      </section>
+
+      <!-- Videos Panel -->
+      <section class="panel" id="panel-videos">
+        <!-- Search -->
+        <div class="search-box">
+          <input type="text" id="videoSearch" placeholder="🔍 Search videos, channels...">
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips" id="filterChips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="home">🏠 Home</button>
+          <button class="chip" data-filter="sidebar">📌 Sidebar</button>
+          <button class="chip" data-filter="search">🔍 Search</button>
+        </div>
+
+        <!-- Video Grid -->
+        <div id="videoGrid" class="video-grid"></div>
+
+        <!-- Load More -->
+        <div id="loadMoreWrap" class="load-more-wrap" style="display:none;">
+          <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+        </div>
+      </section>
+
+      <!-- Blocking Panel -->
+      <section class="panel" id="panel-blocking">
+        <!-- Quick Block -->
+        <div class="card">
+          <div class="card-title">🛡️ Quick Block</div>
+          <p class="card-desc">Hide content matching these rules from your YouTube feed</p>
+          
+          <form id="blockForm" class="block-form">
+            <select id="blockType">
+              <option value="keyword">🔤 Keyword</option>
+              <option value="channel">📺 Channel</option>
+              <option value="category">📂 Category</option>
+            </select>
+            <input id="blockValue" type="text" placeholder="e.g. shorts, mrbeast, gaming" required>
+            <button type="submit" class="btn-primary">+ Add</button>
+          </form>
+
+          <!-- Quick suggestions -->
+          <div class="quick-tags">
+            <span class="quick-label">Quick:</span>
+            <button class="quick-tag" data-type="keyword" data-value="shorts">shorts</button>
+            <button class="quick-tag" data-type="keyword" data-value="clickbait">clickbait</button>
+            <button class="quick-tag" data-type="keyword" data-value="prank">prank</button>
+            <button class="quick-tag" data-type="category" data-value="gaming">gaming</button>
+            <button class="quick-tag" data-type="category" data-value="news">news</button>
+          </div>
+        </div>
+
+        <!-- Active Rules -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 Active Rules</div>
+            <span class="card-badge" id="rulesCount">0</span>
+          </div>
+          <div id="rulesList" class="rules-list"></div>
+        </div>
+
+        <!-- Blocked Stats -->
+        <div class="card">
+          <div class="card-title">📊 Block Impact</div>
+          <div id="blockStats" class="block-stats"></div>
+        </div>
+      </section>
+
+      <!-- Settings Panel -->
+      <section class="panel" id="panel-settings">
+        <div class="card">
+          <div class="card-title">🔗 API Connection</div>
+          <div class="setting-row">
+            <span>Backend Status</span>
+            <span id="apiStatus" class="status-badge status-offline">Offline</span>
+          </div>
+          <div class="setting-row">
+            <span>Sync Mode</span>
+            <span class="status-badge">Local Only</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 Data</div>
+          <div class="setting-row">
+            <span>Total Videos</span>
+            <span id="settingsTotal">—</span>
+          </div>
+          <div class="setting-row">
+            <span>Total Watch Time</span>
+            <span id="settingsWatchTime">—</span>
+          </div>
+          <div class="setting-row">
+            <span>Storage Used</span>
+            <span id="storageUsed">—</span>
+          </div>
+          <button id="exportBtn" class="btn-secondary">📥 Export Data (JSON)</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">ℹ️ About</div>
+          <p class="card-desc">RecTracker v1.0.0 — AI-powered YouTube recommendation tracker</p>
+          <p class="card-desc">🔒 Privacy-first: All data stored locally in your browser</p>
+        </div>
+
+        <div class="card danger-zone">
+          <div class="card-title">⚠️ Danger Zone</div>
+          <p class="card-desc">Clears all tracked data and blocking rules. This cannot be undone.</p>
+          <button id="clearAllBtn" class="btn-danger">🗑️ Clear All Data</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>RecTracker v1.0</span>
+      <span>•</span>
+      <span id="footerStatus">Ready</span>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

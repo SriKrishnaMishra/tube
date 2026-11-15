@@ -1,0 +1,13 @@
+name = "rectracker-realtime-notifications"
+main = "worker.js"
+compatibility_date = "2024-04-01"
+
+# Environment variables
+[vars]
+CF_NOTIFY_SECRET = "rectracker_secret_token_2026"
+
+# Optional Cloudflare KV namespace for Web Push subscriptions (Uncomment when created via wrangler kv:namespace create)
+# [[kv_namespaces]]
+# binding = "PUSH_SUBSCRIPTIONS"
+# id = "YOUR_KV_NAMESPACE_ID"
+

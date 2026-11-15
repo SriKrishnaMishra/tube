@@ -1,0 +1,13 @@
+name = "tube"
+main = "cloudflare/worker.js"
+compatibility_date = "2024-09-23"
+
+# Cloudflare Workers Static Assets: serves the Vite React production build
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# Environment variables
+[vars]
+CF_NOTIFY_SECRET = "rectracker_secret_token_2026"

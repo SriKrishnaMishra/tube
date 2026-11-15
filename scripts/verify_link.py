@@ -56,6 +56,9 @@ def check_row(tr: Tracker, r: int) -> dict:
         res["detail"] = f"HTTP {code} — blocked/error"
         return res
     res["nofollow_seen"] = bool(re.search(r'rel=["\'][^"\']*nofollow', html, re.I))
+    res["noindex_seen"] = bool(re.search(r'<meta[^>]*name=["\']robots["\'][^>]*content=["\'][^"\']*noindex', html, re.I))
+    if res["noindex_seen"]:
+        res["detail"] = "WARNING: meta noindex detected on host page"
     m = re.search(r"https?://([^/\s]+)(/[^\s\"'<>]*)?", target or "")
     if m:
         domain, path = m.group(1), (m.group(2) or "/").strip("/")

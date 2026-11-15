@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "RecTracker - AI YouTube Tracker",
+  "version": "1.0.0",
+  "description": "Track YouTube recommendations with AI. See thumbnails, watch time, categories. Block unwanted content instantly.",
+  "permissions": ["storage"],
+  "host_permissions": ["*://*.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "RecTracker"
+  }
+}

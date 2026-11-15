@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+
+          #!/usr/bin/env python3
 """Step 8 — list rows due for the 7-day re-check (Verify on date reached, not yet verified).
 
 Usage:
@@ -17,6 +18,7 @@ from common import Tracker, load_config, parse_date, today  # noqa: E402
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--days", type=int, default=0, help="look-ahead window (upcoming, not overdue)")
+    ap.add_argument("--notify", action="store_true", help="Send real-time alert via Cloudflare/notification stream if items are due")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -48,6 +50,18 @@ def main() -> int:
     for line in upcoming:
         print(f"  soon  {line}")
     if overdue:
+        if args.notify:
+            try:
+                from notify_cloudflare import notify_event
+                notify_event(
+                    title="⚠️ Link Verification Due",
+                    message=f"{len(overdue)} backlink row(s) are due for 7-day re-check!",
+                    notification_type="warning",
+                    url="/tracking",
+                )
+            except Exception as e:
+                print(f"[warning] could not send real-time notification: {e}")
+
         print("\nAction per row (SOP Step 8):")
         print("  python scripts/verify_link.py --row N              # automated check")
         print("  then fill Verified date (--mark-verified) or mark Removed.")
