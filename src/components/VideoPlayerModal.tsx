@@ -36,7 +36,7 @@ export function VideoPlayerModal({
   onSelectVideo,
 }: VideoPlayerModalProps) {
   const [activeRecord, setActiveRecord] = useState<ContentRecord | null>(record);
-  const [playerMode, setPlayerMode] = useState<'clean-yt' | 'standard-yt' | 'adfree'>('clean-yt');
+  const [playerMode, setPlayerMode] = useState<'standard-yt' | 'clean-yt' | 'adfree'>('standard-yt');
   const [mirrorIndex, setMirrorIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'modal' | 'theater' | 'mini'>('modal');
   const [copied, setCopied] = useState(false);
@@ -146,21 +146,22 @@ export function VideoPlayerModal({
   ];
 
   const youtubeUrl = activeRecord.url || `https://www.youtube.com/watch?v=${activeRecord.videoId}`;
+  const originParam = typeof window !== 'undefined' && window.location.origin ? `&origin=${encodeURIComponent(window.location.origin)}` : '';
 
-  // Reliable YouTube No-Cookie Player (Zero commercial waterfall ads, privacy-focused, instant HD)
-  const noCookieUrl = `https://www.youtube-nocookie.com/embed/${activeRecord.videoId}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&controls=1&enablejsapi=1`;
+  // Standard YouTube Player (Ensures maximum playback compatibility across all creators & networks)
+  const standardYtUrl = `https://www.youtube.com/embed/${activeRecord.videoId}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&controls=1&enablejsapi=1${originParam}`;
 
-  // Standard YouTube Player (Ensures maximum playback compatibility when creator disables no-cookie)
-  const standardYtUrl = `https://www.youtube.com/embed/${activeRecord.videoId}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&controls=1&enablejsapi=1`;
+  // Reliable YouTube No-Cookie Player (Alternative privacy-focused stream)
+  const noCookieUrl = `https://www.youtube-nocookie.com/embed/${activeRecord.videoId}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&controls=1&enablejsapi=1${originParam}`;
 
   // Alternative open source proxy stream
   const proxyUrl = PROXY_MIRRORS[mirrorIndex % PROXY_MIRRORS.length];
 
   const currentEmbedUrl =
-    playerMode === 'clean-yt'
-      ? noCookieUrl
-      : playerMode === 'standard-yt'
+    playerMode === 'standard-yt'
       ? standardYtUrl
+      : playerMode === 'clean-yt'
+      ? noCookieUrl
       : proxyUrl;
 
   const rotateMirror = () => {
@@ -218,8 +219,8 @@ export function VideoPlayerModal({
             key={currentEmbedUrl}
             src={currentEmbedUrl}
             title={activeRecord.title}
-            referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+            referrerPolicy="no-referrer-when-downgrade"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             className="w-full h-full border-0"
@@ -286,28 +287,28 @@ export function VideoPlayerModal({
             {/* Stream Mode Selector */}
             <div className="flex items-center rounded-xl bg-black/50 border border-white/10 p-0.5 text-[11px]">
               <button
+                onClick={() => setPlayerMode('standard-yt')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                  playerMode === 'standard-yt'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                title="Universal YouTube Stream (Fixes 'Video Unavailable')"
+              >
+                <Play size={11} />
+                <span>Standard HD</span>
+              </button>
+              <button
                 onClick={() => setPlayerMode('clean-yt')}
                 className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer ${
                   playerMode === 'clean-yt'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-gray-400 hover:text-white'
                 }`}
-                title="Reliable High-Speed Ad-Free Stream (1080p, No-Cookie)"
+                title="Privacy-Enhanced No-Cookie Stream"
               >
                 <ShieldCheck size={11} className="text-emerald-300" />
-                <span>Ad-Free HD</span>
-              </button>
-              <button
-                onClick={() => setPlayerMode('standard-yt')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                  playerMode === 'standard-yt'
-                    ? 'bg-red-600 text-white shadow-sm'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-                title="Standard YouTube Stream (Fixes 'Video Unavailable')"
-              >
-                <Play size={11} />
-                <span>YouTube HD</span>
+                <span>No-Cookie</span>
               </button>
               <button
                 onClick={() => setPlayerMode('adfree')}
@@ -387,8 +388,8 @@ export function VideoPlayerModal({
               key={currentEmbedUrl}
               src={currentEmbedUrl}
               title={activeRecord.title}
-              referrerPolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+              referrerPolicy="no-referrer-when-downgrade"
+              sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               className="w-full h-full border-0"
@@ -403,36 +404,43 @@ export function VideoPlayerModal({
             </span>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setPlayerMode('standard-yt')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                  playerMode === 'standard-yt'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-200'
+                }`}
+                title="Universal YouTube Stream (Fixes 'Video unavailable' instantly)"
+              >
+                <span>▶ Standard Stream</span>
+              </button>
+              <button
                 onClick={() => setPlayerMode('clean-yt')}
                 className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
                   playerMode === 'clean-yt'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'bg-white/10 hover:bg-white/20 text-gray-200'
                 }`}
+                title="Privacy-Enhanced No-Cookie Stream"
               >
                 <span>🛡️ Ad-Free HD</span>
               </button>
               <button
-                onClick={() => setPlayerMode('standard-yt')}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
-                  playerMode === 'standard-yt'
-                    ? 'bg-red-600 text-white shadow-sm'
-                    : 'bg-white/10 hover:bg-white/20 text-gray-200'
-                }`}
-                title="Fixes 'Video Unavailable' error immediately"
-              >
-                <span>▶ Standard YouTube</span>
-              </button>
-              <button
-                onClick={() => setPlayerMode('adfree')}
+                onClick={() => {
+                  if (playerMode === 'adfree') {
+                    rotateMirror();
+                  } else {
+                    setPlayerMode('adfree');
+                  }
+                }}
                 className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
                   playerMode === 'adfree'
                     ? 'bg-indigo-600 text-white shadow-sm'
                     : 'bg-white/10 hover:bg-white/20 text-gray-200'
                 }`}
-                title="Proxy mirror stream"
+                title="Alternative Open-Source Mirror (Click to cycle mirrors)"
               >
-                <span>⚡ Proxy Stream</span>
+                <span>⚡ Proxy Stream {playerMode === 'adfree' ? `(#${(mirrorIndex % PROXY_MIRRORS.length) + 1})` : ''}</span>
               </button>
             </div>
           </div>

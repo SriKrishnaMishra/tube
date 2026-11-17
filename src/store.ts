@@ -120,10 +120,10 @@ export const KNOWN_VIDEO_CATALOG: KnownVideoMeta[] = [
     title: 'NVIDIA NeMo Guardrails Tutorial: Defend RAG Apps Against Prompt Injection',
     channel: 'Krish Naik',
     domain: 'AI & Machine Learning',
-    category: 'Machine Learning fundamentals',
-    subcategoryId: 1,
+    category: 'Generative AI & LLMs',
+    subcategoryId: 5,
     duration: 12600,
-    tags: ['krish naik', 'feature engineering', 'encoding', 'scaling', 'imputation'],
+    tags: ['krish naik', 'generative ai', 'rag', 'nemo guardrails', 'ai security'],
   },
   {
     id: 'e8Yw4alG16Q',

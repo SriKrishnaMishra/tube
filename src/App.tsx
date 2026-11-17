@@ -14,7 +14,6 @@ import { AIRecommendations } from './components/AIRecommendations';
 import { SmartDiscovery } from './components/SmartDiscovery';
 import { ChannelHub } from './components/ChannelHub';
 import { ThemeSelector } from './components/ThemeSelector';
-import { InstallAppButton } from './components/InstallAppButton';
 import { NotificationCenter } from './components/NotificationCenter';
 import { GlobalSearch } from './components/GlobalSearch';
 import { VideoPlayerModal } from './components/VideoPlayerModal';

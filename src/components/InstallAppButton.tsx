@@ -179,72 +179,75 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
 
   return (
     <>
-      {/* Sidebar Promo Card */}
+      {/* Sleek, Non-Intrusive Sidebar Trigger Item */}
       {variant === 'sidebar' && (
         <button
           onClick={() => openModal('mobile')}
-          className={`w-full p-2.5 rounded-2xl border transition-all text-left flex items-center gap-3 cursor-pointer bg-gradient-to-r from-emerald-600/15 via-teal-600/10 to-indigo-600/15 hover:from-emerald-600/25 hover:to-indigo-600/25 border-emerald-500/30 text-white shadow-md shadow-emerald-500/5 group ${className}`}
-          title="Scan QR Code to open on mobile"
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-emerald-500/30 text-gray-300 hover:text-white group ${className}`}
+          title="Open Mobile Stream QR Scanner"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-black flex items-center justify-center font-bold shadow-md shrink-0 group-hover:scale-105 transition-transform">
-            <QrCode size={16} className="text-white" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-500/25 transition-all">
+            <Smartphone size={14} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-white flex items-center gap-1.5 truncate">
-              <span>Mobile App (QR)</span>
-              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+            <div className="font-semibold text-white flex items-center gap-1.5 truncate">
+              <span>Mobile Stream</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 PWA
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 truncate">Scan with phone camera</p>
+            <p className="text-[10px] text-gray-400 truncate">Scan QR for phone</p>
           </div>
+          <QrCode size={14} className="text-gray-400 group-hover:text-emerald-400 shrink-0 transition-colors" />
         </button>
       )}
 
-      {/* Header Variant (if called) */}
+      {/* Header Variant */}
       {variant === 'header' && (
         <button
           onClick={() => openModal('mobile')}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer shrink-0 ${className}`}
           title="Open mobile scanner"
         >
-          <QrCode size={13} className="text-emerald-400" />
-          <span>Mobile App</span>
+          <Smartphone size={13} className="text-emerald-400" />
+          <span>Mobile Stream</span>
         </button>
       )}
 
       {/* Modern, Beautiful, Elegant Redesigned Mobile Scanner Modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-[100000] overflow-y-auto p-3 sm:p-5 bg-black/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-150"
+          className="fixed inset-0 z-[100000] overflow-y-auto p-4 sm:p-6 bg-black/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowModal(false);
           }}
         >
           <div
-            className="relative w-full max-w-md mx-auto rounded-3xl border border-white/15 bg-gradient-to-b from-[#131622] via-[#0f111a] to-[#0a0b12] shadow-2xl text-gray-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
+            className="relative w-full max-w-lg mx-auto rounded-3xl border border-white/15 bg-gradient-to-b from-[#131622] via-[#0f111a] to-[#0a0b12] shadow-2xl text-gray-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header: Clean, Un-truncated, with Minimalist Circular Close Button */}
-            <div className="px-5 py-4 bg-[#161a29]/90 border-b border-white/10 flex items-center justify-between gap-3">
+            {/* Header: Spacious, Un-truncated, Minimalist Circular Close */}
+            <div className="px-6 py-4 bg-[#161a29]/95 border-b border-white/10 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
-                  {activeTab === 'mobile' ? <QrCode size={18} /> : <Laptop size={18} />}
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 shrink-0">
+                  {activeTab === 'mobile' ? <Smartphone size={20} /> : <Laptop size={20} />}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white truncate">Open on Mobile Phone</h3>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                    <h3 className="text-base font-bold text-white truncate">
+                      {activeTab === 'mobile' ? 'Stream on Mobile Phone' : 'Install DevTube App'}
+                    </h3>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                       PWA
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400 truncate">
-                    100% ad-free full-screen stream on your phone
+                  <p className="text-xs text-gray-400 truncate">
+                    100% ad-free full-screen stream on your device
                   </p>
                 </div>
               </div>
 
-              {/* Minimalist, Circular Close Button (Never squishes title) */}
+              {/* Minimalist, Circular Close Button */}
               <button
                 onClick={() => setShowModal(false)}
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
@@ -254,121 +257,114 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
               </button>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="p-5 overflow-y-auto max-h-[82vh] space-y-4">
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
               {/* Segmented Tab Switcher */}
               <div className="flex items-center p-1 rounded-2xl bg-black/50 border border-white/10">
                 <button
                   onClick={() => setActiveTab('mobile')}
-                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     activeTab === 'mobile'
                       ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Smartphone size={14} />
-                  <span>Mobile Phone</span>
+                  <Smartphone size={15} />
+                  <span>Mobile Phone (QR)</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('laptop')}
-                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     activeTab === 'laptop'
                       ? 'bg-indigo-600 text-white shadow'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Laptop size={14} />
-                  <span>Laptop / Desktop</span>
+                  <Laptop size={15} />
+                  <span>Desktop / Laptop</span>
                 </button>
               </div>
 
               {/* TAB 1: Mobile Phone QR Scanner */}
               {activeTab === 'mobile' && (
                 <div className="space-y-4 animate-in fade-in duration-150">
-                  {/* Connection Selector: Clean Side-by-Side Pills */}
+                  {/* Connection Selector */}
                   {cloudflareUrl && (
-                    <div className="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+                    <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-black/40 border border-white/10 text-xs">
                       <button
                         onClick={() => setUrlMode('cloudflare')}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           urlMode === 'cloudflare'
                             ? 'bg-emerald-600 text-white shadow'
                             : 'text-gray-400 hover:text-white'
                         }`}
                       >
-                        <Sparkles size={12} className="text-emerald-300" />
-                        <span>Cloudflare HTTPS (Anywhere)</span>
+                        <Sparkles size={13} className="text-emerald-300" />
+                        <span>Cloudflare HTTPS (Global)</span>
                       </button>
                       <button
                         onClick={() => setUrlMode('local')}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           urlMode === 'local'
                             ? 'bg-indigo-600 text-white shadow'
                             : 'text-gray-400 hover:text-white'
                         }`}
                       >
-                        <Wifi size={12} />
+                        <Wifi size={13} />
                         <span>Local Wi-Fi</span>
                       </button>
                     </div>
                   )}
 
-                  {/* QR Code Presentation Box: Perfectly Square & Centered */}
-                  <div className="p-4 rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/10 via-[#131622] to-[#0c0e17] flex flex-col items-center text-center">
-                    {/* The Square QR Card */}
-                    <div className="relative w-48 h-48 sm:w-52 sm:h-52 aspect-square p-2.5 bg-white rounded-2xl shadow-2xl flex items-center justify-center mx-auto my-1 border-2 border-emerald-400/40 shrink-0">
-                      {/* Scanner Target Corner Brackets */}
-                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-500 rounded-tl" />
-                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-500 rounded-tr" />
-                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-500 rounded-bl" />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-500 rounded-br" />
-
+                  {/* High Contrast Clean QR Code Card */}
+                  <div className="p-5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-black/40 flex flex-col items-center text-center">
+                    <div className="relative w-52 h-52 sm:w-56 sm:h-56 p-3 bg-white rounded-2xl shadow-2xl flex items-center justify-center mx-auto my-1 border-2 border-emerald-400/30 shrink-0">
                       {qrCodeDataUrl ? (
                         <img
                           src={qrCodeDataUrl}
                           alt="Scan QR Code to open on mobile"
-                          className="w-full h-full object-contain rounded-lg"
+                          className="w-full h-full object-contain rounded-xl"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-700">
                           <RefreshCw className="animate-spin text-emerald-600 mb-2" size={24} />
-                          <span className="text-xs font-semibold">Generating...</span>
+                          <span className="text-xs font-semibold">Generating QR...</span>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-[11px] text-emerald-300 font-semibold mt-2 flex items-center gap-1.5">
-                      <QrCode size={13} />
-                      <span>Point your phone camera at this QR code</span>
+                    <p className="text-xs text-emerald-300 font-semibold mt-3 flex items-center gap-1.5">
+                      <QrCode size={14} />
+                      <span>Point your phone camera to stream immediately</span>
                     </p>
 
-                    {/* URL Bar & Actions */}
-                    <div className="w-full mt-3">
+                    {/* URL Bar & Instant Actions */}
+                    <div className="w-full mt-4">
                       {isEditingUrl ? (
-                        <div className="flex items-center gap-1.5 mb-2">
+                        <div className="flex items-center gap-2 mb-2">
                           <input
                             type="text"
                             value={customUrl || mobileUrl}
                             onChange={(e) => setCustomUrl(e.target.value)}
                             placeholder="https://..."
-                            className="flex-1 px-3 py-1.5 rounded-lg bg-black/60 border border-white/20 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                            className="flex-1 px-3 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                           />
                           <button
                             onClick={() => setIsEditingUrl(false)}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold"
+                            className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold cursor-pointer"
                           >
                             Save
                           </button>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-emerald-300">
-                          <span className="truncate select-all px-1 text-[11px]">{mobileUrl}</span>
-                          <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-emerald-300">
+                          <span className="truncate select-all px-1.5 text-[11px]">{mobileUrl}</span>
+                          <div className="flex items-center gap-1.5 shrink-0 font-sans">
                             <button
                               onClick={copyMobileLink}
-                              className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center gap-1 text-[11px] font-sans font-semibold cursor-pointer"
-                              title="Copy URL"
+                              className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center gap-1 text-xs font-semibold cursor-pointer"
+                              title="Copy Link to Clipboard"
                             >
                               {copied ? (
                                 <>
@@ -386,8 +382,8 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                               href={mobileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1 text-[11px] font-sans font-semibold cursor-pointer"
-                              title="Test link"
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1 text-xs font-semibold cursor-pointer"
+                              title="Open in new tab"
                             >
                               <ExternalLink size={12} />
                               <span>Open</span>
@@ -396,7 +392,7 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between text-[10px] text-gray-400 mt-1.5 px-1">
+                      <div className="flex items-center justify-between text-[11px] text-gray-400 mt-2 px-1">
                         <button
                           onClick={() => setIsEditingUrl(!isEditingUrl)}
                           className="text-indigo-400 hover:underline cursor-pointer"
@@ -407,41 +403,41 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                         {qrCodeDataUrl && (
                           <a
                             href={qrCodeDataUrl}
-                            download="RecTracker-Mobile-QR.png"
-                            className="text-gray-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                            download="DevTube-Mobile-QR.png"
+                            className="text-gray-400 hover:text-emerald-300 transition-colors flex items-center gap-1 font-medium"
                           >
-                            <Download size={11} />
-                            <span>Download PNG</span>
+                            <Download size={12} />
+                            <span>Download QR PNG</span>
                           </a>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Clean 3-Step Installation Guide */}
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center mb-1">
+                  {/* Clean 3-Step Visual Installation Guide */}
+                  <div className="grid grid-cols-3 gap-2.5 text-center">
+                    <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center mb-1.5">
                         1
                       </div>
-                      <span className="text-[11px] font-bold text-white">Scan QR</span>
-                      <span className="text-[9px] text-gray-400">with Camera</span>
+                      <span className="text-xs font-bold text-white">Scan QR</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">Camera App</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center mb-1">
+                    <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center mb-1.5">
                         2
                       </div>
-                      <span className="text-[11px] font-bold text-white">Open Link</span>
-                      <span className="text-[9px] text-gray-400">in Chrome / Safari</span>
+                      <span className="text-xs font-bold text-white">Open Link</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">Chrome / Safari</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center mb-1">
+                    <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center mb-1.5">
                         3
                       </div>
-                      <span className="text-[11px] font-bold text-white">Add to Home</span>
-                      <span className="text-[9px] text-gray-400">Stream ad-free</span>
+                      <span className="text-xs font-bold text-white">Add to Home</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">Ad-free stream</span>
                     </div>
                   </div>
                 </div>
