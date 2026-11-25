@@ -368,14 +368,14 @@ export function AIRecommendations({
         label: '🧠 Machine Learning',
         filter: (r: ContentRecord) =>
           r.category.toLowerCase().includes('machine learning') ||
-          r.domain.toLowerCase().includes('machine learning'),
+          (r.domain || '').toLowerCase().includes('machine learning'),
         icon: '🧠',
       },
       {
         id: 'fullstack-web',
         label: '🚀 Full-Stack & React',
         filter: (r: ContentRecord) =>
-          r.domain.toLowerCase().includes('web') ||
+          (r.domain || '').toLowerCase().includes('web') ||
           r.category.toLowerCase().includes('frontend') ||
           r.category.toLowerCase().includes('full-stack'),
         icon: '🚀',
