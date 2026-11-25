@@ -1,7 +1,7 @@
 {
-  "name": "RecTracker AI - Recommendation & Backlink Hub",
-  "short_name": "RecTracker",
-  "description": "57-Category Software Development Recommendation Engine and Real-Time Backlink Publishing Platform",
+  "name": "DevTube - Developer Video Platform & Recommendation Engine",
+  "short_name": "DevTube",
+  "description": "Ad-free developer video streaming platform with 57-category recommendation engine across 8 tech domains",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
