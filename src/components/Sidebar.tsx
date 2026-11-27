@@ -36,16 +36,16 @@ export function Sidebar({ activeTab, onTabChange, theme }: SidebarProps) {
   const isDark = theme !== 'light';
 
   return (
-    <aside className={`w-64 h-full flex flex-col border-r ${isDark ? 'bg-[#0d0d14] border-white/5' : 'bg-white border-gray-200'}`}>
+    <aside className={`w-64 h-full flex flex-col border-r ${isDark ? 'bg-[#0c0c10] border-white/[0.08]' : 'bg-white border-slate-200'}`}>
       {/* Logo */}
-      <div className="h-14 flex items-center px-5 border-b border-white/5">
+      <div className={`h-16 flex items-center px-5 border-b ${isDark ? 'border-white/[0.08]' : 'border-slate-200'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
             <Zap size={16} className="text-white" />
           </div>
           <div>
-            <span className="font-semibold text-sm">DevTube</span>
-            <span className={`block text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v1.0.0 Studio</span>
+            <span className="font-bold text-sm tracking-tight">DevTube</span>
+            <span className={`block text-[10px] ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>Developer Studio</span>
           </div>
         </div>
       </div>

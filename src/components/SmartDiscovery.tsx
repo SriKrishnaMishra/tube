@@ -104,20 +104,20 @@ export function SmartDiscovery({ records, rules, stats, onPlayInModal }: SmartDi
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-emerald-900/30 via-teal-900/20 to-slate-900/40 border border-emerald-500/20 backdrop-blur-xl shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.08]">
         <div>
-          <h2 className="text-2xl font-extrabold flex items-center gap-2.5 text-white">
-            <Compass size={26} className="text-emerald-400 animate-spin-slow" />
-            Smart Discovery Engine
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2.5">
+            <Compass size={24} className="text-indigo-500" />
+            Smart Discovery
           </h2>
-          <p className="text-xs text-emerald-200/80 mt-1">
-            Curate your feed instantly by current mood, taxonomy domain, and customized recency.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            Curate your feed by learning mood, domain, and recency.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1.5">
-            <Zap size={13} className="text-emerald-400 fill-emerald-400" />
-            Instant Real-time Filter
+          <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-medium flex items-center gap-1.5">
+            <Zap size={13} />
+            Live Filter
           </span>
         </div>
       </div>

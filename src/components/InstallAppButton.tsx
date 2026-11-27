@@ -48,8 +48,12 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
   const [activeTab, setActiveTab] = useState<'mobile' | 'laptop'>('mobile');
 
   // Network and QR Code State
-  const [detectedIp, setDetectedIp] = useState<string>('10.251.69.204');
-  const [allIps, setAllIps] = useState<string[]>(['10.251.69.204']);
+  const [detectedIp, setDetectedIp] = useState<string>(() =>
+    typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? window.location.hostname
+      : '10.92.107.204'
+  );
+  const [allIps, setAllIps] = useState<string[]>(['10.92.107.204']);
   const [port, setPort] = useState<number>(3000);
   const [cloudflareUrl, setCloudflareUrl] = useState<string>('');
   const [urlMode, setUrlMode] = useState<'cloudflare' | 'local'>('cloudflare');
@@ -439,6 +443,27 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                       <span className="text-xs font-bold text-white">Add to Home</span>
                       <span className="text-[10px] text-gray-400 mt-0.5">Ad-free stream</span>
                     </div>
+                  </div>
+
+                  {/* Standalone APK Info (Works 24/7 even when Laptop is OFF) */}
+                  <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span>Android APK (Works When Laptop Is Off)</span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 mt-0.5">
+                        Download <code className="text-indigo-300 font-mono">DevTube-Android-APK</code> from GitHub Actions to run 100% standalone on Android.
+                      </p>
+                    </div>
+                    <a
+                      href="https://github.com/SriKrishnaMishra/tube/actions/workflows/build-apk.yml"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1"
+                    >
+                      <Download size={12} />
+                      <span>Get APK</span>
+                    </a>
                   </div>
                 </div>
               )}

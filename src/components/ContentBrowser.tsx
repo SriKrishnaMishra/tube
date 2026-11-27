@@ -720,15 +720,15 @@ export function ContentBrowser({
               return (
                 <div
                   key={record.id}
-                  className="group rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 hover:bg-gray-50/80 dark:hover:bg-slate-900/90 hover:border-indigo-400/50 hover:shadow-xl dark:hover:shadow-indigo-500/20 transition-all duration-300 p-4 flex flex-col justify-between backdrop-blur-xl shadow-sm"
+                  className="group rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#111116] hover:border-indigo-500/40 hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden"
                 >
                   <div>
-                    {/* Thumbnail */}
+                    {/* 16:9 Cinema Thumbnail */}
                     <div
                       onClick={() => {
                         if (onPlayInModal) onPlayInModal(record);
                       }}
-                      className="w-full h-40 rounded-xl bg-black/60 overflow-hidden relative mb-3 group-hover:shadow-lg transition-shadow cursor-pointer"
+                      className="w-full aspect-video bg-zinc-950 overflow-hidden relative cursor-pointer"
                     >
                       <img
                         src={record.thumbnailUrl || `https://i.ytimg.com/vi/${record.videoId}/hqdefault.jpg`}
@@ -740,77 +740,60 @@ export function ContentBrowser({
                           if (!target.dataset.fallback && record.videoId) {
                             target.dataset.fallback = 'true';
                             target.src = `https://img.youtube.com/vi/${record.videoId}/0.jpg`;
-                          } else {
-                            target.src =
-                              'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&auto=format&fit=crop&q=80';
                           }
                         }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                       />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                      {/* Ad-Free Play Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
-                          <Play size={20} fill="white" className="ml-0.5" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="w-11 h-11 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl">
+                          <Play size={18} fill="white" className="ml-0.5" />
                         </div>
                       </div>
 
-                      {/* Zero-Ad Tag */}
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/95 text-[10px] font-bold text-white shadow flex items-center gap-1 backdrop-blur-sm">
-                        <ShieldCheck size={10} />
-                        Zero Ads
-                      </span>
-
-                      {/* Duration */}
                       {record.duration && (
-                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/85 text-[10px] font-mono font-bold text-white shadow">
+                        <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[10px] font-mono font-medium text-white">
                           {Math.floor(record.duration / 60)}:{String(record.duration % 60).padStart(2, '0')}
                         </span>
                       )}
                     </div>
 
-                    {/* Domain & Category Badges */}
-                    <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-                      {record.domain && (
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                          {record.domain}
+                    <div className="p-3.5 pb-2">
+                      {/* Clean Category Chip */}
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                        {record.domain && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300">
+                            {record.domain}
+                          </span>
+                        )}
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+                          {record.category}
                         </span>
-                      )}
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200">
-                        #{record.subcategoryId || 1} {record.category}
-                      </span>
-                    </div>
+                      </div>
 
-                    {/* Title & Channel */}
-                    <h3
-                      onClick={() => {
-                        if (onPlayInModal) onPlayInModal(record);
-                      }}
-                      className="text-sm font-bold line-clamp-2 text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors mb-1.5 leading-snug cursor-pointer"
-                    >
-                      {record.title}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-indigo-200/80 mb-3 font-medium">
-                      <User size={12} className="text-indigo-500 dark:text-indigo-400" />
-                      <span className="truncate">{record.channel}</span>
+                      {/* Title & Channel */}
+                      <h3
+                        onClick={() => {
+                          if (onPlayInModal) onPlayInModal(record);
+                        }}
+                        className="text-sm font-semibold line-clamp-2 text-slate-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug cursor-pointer"
+                      >
+                        {record.title}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400 mt-1.5 font-medium">
+                        <User size={11} />
+                        <span className="truncate">{record.channel}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Footer Metadata, Delete Button & Watch Button */}
-                  <div className="pt-2.5 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                    <div className="flex items-center gap-2.5">
-                      {record.viewCount && (
-                        <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                          <Eye size={12} className="text-cyan-500 dark:text-cyan-400" />
-                          {record.viewCount.toLocaleString()}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                        <Clock size={12} className="text-amber-500 dark:text-amber-400" />
-                        {new Date(record.timestamp).toLocaleDateString()}
-                      </span>
-                    </div>
+                  {/* Minimal Footer */}
+                  <div className="px-3.5 py-2.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
+                    <span className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                      <ShieldCheck size={12} />
+                      Ad-free
+                    </span>
 
                     <div className="flex items-center gap-1.5">
                       <button
@@ -818,8 +801,8 @@ export function ContentBrowser({
                           e.stopPropagation();
                           handleDeleteVideo(record.id || record.videoId, record.title);
                         }}
-                        className="p-1.5 rounded-xl text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                        title="Delete video from portal"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        title="Remove video"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -827,11 +810,10 @@ export function ContentBrowser({
                       {onPlayInModal && (
                         <button
                           onClick={() => onPlayInModal(record)}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow flex items-center gap-1.5 cursor-pointer"
-                          title="Watch without ads in portal modal player"
+                          className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                           <Play size={11} fill="currentColor" />
-                          <span>Watch Ad-Free</span>
+                          <span>Watch</span>
                         </button>
                       )}
                     </div>

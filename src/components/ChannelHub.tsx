@@ -285,6 +285,9 @@ export function ChannelHub({
   const [activeTab, setActiveTab] = useState<'playlists' | 'creator-videos' | 'affinity-videos'>('creator-videos');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [creatorSearchQuery, setCreatorSearchQuery] = useState('');
+  const [showAddCreatorForm, setShowAddCreatorForm] = useState(false);
+  const [showAllGrid, setShowAllGrid] = useState(false);
+  const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>('All');
 
   // Deleted videos state
   const [deletedIds, setDeletedIds] = useState<string[]>(() => {
@@ -509,19 +512,31 @@ export function ChannelHub({
     );
   }, [customVideos, records, deletedSet]);
 
-  // Filter channels according to live search query
+  // Available domain filters derived from channels
+  const domainFilters = useMemo(() => {
+    const domains = new Set<string>(['All']);
+    channels.forEach((c) => {
+      if (c.domain) domains.add(c.domain);
+    });
+    return Array.from(domains);
+  }, [channels]);
+
+  // Filter channels according to domain pill + live search query
   const filteredChannels = useMemo(() => {
-    if (!creatorSearchQuery.trim()) return channels;
-    const q = creatorSearchQuery.toLowerCase().trim();
-    return channels.filter(
-      (c) =>
+    return channels.filter((c) => {
+      const matchesDomain = selectedDomainFilter === 'All' || c.domain === selectedDomainFilter;
+      if (!matchesDomain) return false;
+      if (!creatorSearchQuery.trim()) return true;
+      const q = creatorSearchQuery.toLowerCase().trim();
+      return (
         c.name.toLowerCase().includes(q) ||
         (c.handle && c.handle.toLowerCase().includes(q)) ||
         (c.domain && c.domain.toLowerCase().includes(q)) ||
         (c.category && c.category.toLowerCase().includes(q)) ||
         (c.tags && c.tags.some((t) => t.toLowerCase().includes(q)))
-    );
-  }, [channels, creatorSearchQuery]);
+      );
+    });
+  }, [channels, creatorSearchQuery, selectedDomainFilter]);
 
   // Direct 1-click tracking for any YouTube creator name
   const handleTrackDirectCreator = (creatorNameOrQuery: string) => {
@@ -930,97 +945,142 @@ export function ChannelHub({
     }
   };
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-rose-950/40 via-purple-950/30 to-slate-900/60 border border-rose-500/20 backdrop-blur-xl shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-rose-500/30 text-white">
-            <Tv size={24} />
-          </div>
-          <div>
-            <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-              <span>Creator Channels & Playlists</span>
-              <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30">
-                100% Ad-Free
+  // Shared cinema-grade 16:9 video card renderer (zero duplicated card markup)
+  const renderVideoCard = (
+    vid: ContentRecord,
+    opts?: { episodeIndex?: number; playlistContext?: ChannelPlaylist; accentTag?: string }
+  ) => {
+    const playTarget: ContentRecord = opts?.playlistContext
+      ? {
+          ...vid,
+          playlistId: opts.playlistContext.playlistId,
+          playlistTitle: opts.playlistContext.title,
+        }
+      : vid;
+
+    return (
+      <div
+        key={`${opts?.playlistContext?.id || 'vid'}-${vid.id || vid.videoId}`}
+        className="group rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#111116] hover:border-indigo-500/40 dark:hover:border-indigo-500/40 hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden"
+      >
+        <div>
+          {/* 16:9 Cinema Thumbnail */}
+          <div
+            onClick={() => onPlayInModal && onPlayInModal(playTarget)}
+            className="w-full aspect-video bg-zinc-950 overflow-hidden relative cursor-pointer"
+          >
+            <img
+              src={vid.thumbnailUrl || `https://i.ytimg.com/vi/${vid.videoId}/hqdefault.jpg`}
+              alt={vid.title}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.fallback && vid.videoId) {
+                  target.dataset.fallback = 'true';
+                  target.src = `https://img.youtube.com/vi/${vid.videoId}/0.jpg`;
+                }
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+
+            {/* Subtle Center Play Trigger */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="w-11 h-11 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl">
+                <Play size={18} fill="white" className="ml-0.5" />
+              </div>
+            </div>
+
+            {typeof opts?.episodeIndex === 'number' && (
+              <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-[10px] font-mono font-semibold text-white">
+                EP {String(opts.episodeIndex + 1).padStart(2, '0')}
               </span>
-            </h2>
-            <p className="text-xs text-rose-200/80 mt-0.5">
-              Explore authentic creator channels (Krish Naik, Piyush Garg, Fireship, Andrej Karpathy) with full series playlists and related recommendations.
-            </p>
-          </div>
-        </div>
+            )}
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5">
-            <ShieldCheck size={14} className="text-emerald-400" />
-            Ad-Free Stream Mode
-          </span>
-        </div>
-      </div>
+            {opts?.accentTag && (
+              <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-indigo-600/90 backdrop-blur-sm text-[10px] font-medium text-white">
+                {opts.accentTag}
+              </span>
+            )}
 
-      {/* Success Alert */}
-      {successMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 shadow-lg">
-          <CheckCircle2 size={16} className="text-emerald-400" />
-          <span>{successMsg}</span>
-        </div>
-      )}
-
-      {/* Add Channel or Playlist Form */}
-      <div className="p-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 backdrop-blur-xl shadow-sm space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-          <Plus size={14} className="text-rose-500" />
-          <span>Track YouTube Channel or Playlist URL</span>
-        </div>
-
-        <form onSubmit={handleAddChannel} className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          <div className="md:col-span-6 relative">
-            <input
-              type="text"
-              value={newChannelInput}
-              onChange={(e) => setNewChannelInput(e.target.value)}
-              placeholder="e.g. Krish Naik, @piyushgargdev, Fireship, Andrej Karpathy..."
-              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-white/15 text-xs text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40"
-            />
+            {vid.duration && (
+              <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[10px] font-mono font-medium text-white">
+                {Math.floor(vid.duration / 60)}:{String(vid.duration % 60).padStart(2, '0')}
+              </span>
+            )}
           </div>
 
-          <div className="md:col-span-4 relative">
-            <input
-              type="text"
-              value={newPlaylistInput}
-              onChange={(e) => setNewPlaylistInput(e.target.value)}
-              placeholder="Optional: Playlist URL (e.g. youtube.com/playlist?list=PL...)"
-              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-950 border border-gray-300 dark:border-white/15 text-xs text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              disabled={!newChannelInput.trim()}
-              className="w-full h-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+          {/* Card Content */}
+          <div className="p-3.5 pb-2">
+            <h4
+              onClick={() => onPlayInModal && onPlayInModal(playTarget)}
+              className="text-sm font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 line-clamp-2 leading-snug cursor-pointer transition-colors"
+              title={vid.title}
             >
-              <Plus size={14} />
-              <span>Track Creator</span>
+              {vid.title}
+            </h4>
+            <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
+              <span className="truncate font-medium">{vid.channel}</span>
+              <span>•</span>
+              <span className="truncate">{vid.category}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Minimal Footer */}
+        <div className="px-3.5 py-2.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <ShieldCheck size={12} />
+            Ad-free
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteVideo(vid.id || vid.videoId, vid.title, opts?.playlistContext?.id);
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+              title="Remove video"
+            >
+              <Trash2 size={13} />
             </button>
+            {onPlayInModal && (
+              <button
+                onClick={() => onPlayInModal(playTarget)}
+                className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Play size={11} fill="currentColor" />
+                <span>Watch</span>
+              </button>
+            )}
           </div>
-        </form>
+        </div>
       </div>
+    );
+  };
 
-      {/* Tracked Creators Section with Live Search & 1-Click Universal Creator Tracking */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <Users size={15} className="text-rose-400" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200">
-              Tracked Creators ({filteredChannels.length} of {channels.length})
-            </h3>
+  return (
+    <div className="space-y-5 max-w-7xl mx-auto pb-8">
+      {/* Studio Toolbar Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.08]">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Creator Studios</h2>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-medium">
+              <ShieldCheck size={12} />
+              Ad-Free Stream
+            </span>
           </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            {channels.length} vetted developer channels across 8 domains — click any creator to stream playlists on-site.
+          </p>
+        </div>
 
-          {/* Live Creator Search & Quick Filter */}
-          <div className="relative w-full sm:w-80">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Creator Search */}
+          <div className="relative flex-1 sm:w-64 sm:flex-none">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
             <input
               type="text"
               value={creatorSearchQuery}
@@ -1031,80 +1091,159 @@ export function ChannelHub({
                   handleTrackDirectCreator(creatorSearchQuery);
                 }
               }}
-              placeholder="Search creator (e.g. Andrej Karpathy, Fireship...)"
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-gray-50 dark:bg-black/50 border border-gray-300 dark:border-white/10 text-xs text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40"
+              placeholder="Filter creators..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-[#111116] border border-slate-200 dark:border-white/10 text-xs placeholder-slate-400 dark:placeholder-zinc-500 outline-none focus:border-indigo-500 transition-colors"
             />
             {creatorSearchQuery && (
               <button
                 onClick={() => setCreatorSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 cursor-pointer"
-                title="Clear creator search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-0.5 cursor-pointer"
+                title="Clear search"
               >
                 <X size={12} />
               </button>
             )}
           </div>
+
+          <button
+            onClick={() => setShowAddCreatorForm((v) => !v)}
+            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer border ${
+              showAddCreatorForm
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white dark:bg-[#111116] border-slate-200 dark:border-white/10 hover:border-indigo-500/40'
+            }`}
+          >
+            <Plus size={14} />
+            <span>Track Channel</span>
+          </button>
+
+          <button
+            onClick={() => setShowAllGrid((v) => !v)}
+            className="px-3 py-2 rounded-xl text-xs font-medium bg-white dark:bg-[#111116] border border-slate-200 dark:border-white/10 hover:border-indigo-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Users size={14} className="text-indigo-500" />
+            <span>{showAllGrid ? 'Compact Rail' : `All ${filteredChannels.length}`}</span>
+          </button>
         </div>
+      </div>
 
-        {/* If no tracked creator matches the query, offer 1-click tracking */}
-        {filteredChannels.length === 0 && creatorSearchQuery.trim() && (
-          <div className="p-4 mb-3 rounded-2xl border border-dashed border-rose-500/40 bg-gradient-to-r from-rose-950/40 via-purple-950/30 to-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-600/30 border border-rose-500/40 flex items-center justify-center text-rose-300 shrink-0">
-                <Users size={18} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">
-                  &ldquo;{creatorSearchQuery}&rdquo; is not yet in your tracked list
-                </p>
-                <p className="text-[11px] text-gray-300">
-                  Track this creator to instantly generate their full course playlist curriculum and video catalog.
-                </p>
-              </div>
+      {/* Collapsible Add Channel Form */}
+      {showAddCreatorForm && (
+        <form
+          onSubmit={(e) => {
+            handleAddChannel(e);
+            setShowAddCreatorForm(false);
+          }}
+          className="p-4 rounded-2xl border border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-950/20 grid grid-cols-1 md:grid-cols-12 gap-3"
+        >
+          <input
+            type="text"
+            value={newChannelInput}
+            onChange={(e) => setNewChannelInput(e.target.value)}
+            placeholder="Creator name or @handle (e.g. Krish Naik, @Fireship)..."
+            className="md:col-span-6 px-3.5 py-2 rounded-xl bg-white dark:bg-[#09090b] border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-indigo-500"
+          />
+          <input
+            type="text"
+            value={newPlaylistInput}
+            onChange={(e) => setNewPlaylistInput(e.target.value)}
+            placeholder="Optional: YouTube Playlist URL..."
+            className="md:col-span-4 px-3.5 py-2 rounded-xl bg-white dark:bg-[#09090b] border border-slate-200 dark:border-white/10 text-xs outline-none focus:border-indigo-500"
+          />
+          <button
+            type="submit"
+            disabled={!newChannelInput.trim()}
+            className="md:col-span-2 py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Plus size={14} />
+            <span>Add</span>
+          </button>
+        </form>
+      )}
+
+      {/* Success Toast */}
+      {successMsg && (
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center gap-2">
+          <CheckCircle2 size={15} />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {/* Domain Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {domainFilters.map((dom) => (
+          <button
+            key={dom}
+            onClick={() => setSelectedDomainFilter(dom)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border ${
+              selectedDomainFilter === dom
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white dark:bg-[#111116] text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-white/[0.08] hover:border-indigo-500/40'
+            }`}
+          >
+            {dom}
+          </button>
+        ))}
+      </div>
+
+      {/* Empty Search Fallback */}
+      {filteredChannels.length === 0 && creatorSearchQuery.trim() && (
+        <div className="p-4 rounded-2xl border border-dashed border-indigo-500/40 bg-indigo-50/40 dark:bg-[#111116] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Users size={18} className="text-indigo-500 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold">&ldquo;{creatorSearchQuery}&rdquo; is not in your tracked list yet</p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Add this creator now to generate their streamable curriculum immediately.
+              </p>
             </div>
-            <button
-              onClick={() => handleTrackDirectCreator(creatorSearchQuery)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
-            >
-              <Plus size={14} />
-              <span>Track & View All Content</span>
-            </button>
           </div>
-        )}
+          <button
+            onClick={() => handleTrackDirectCreator(creatorSearchQuery)}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Plus size={14} />
+            <span>Track Creator</span>
+          </button>
+        </div>
+      )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+      {/* Creator Selector: Compact Horizontal Rail by Default OR Expandable Grid */}
+      {filteredChannels.length > 0 && (
+        <div
+          className={
+            showAllGrid
+              ? 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5'
+              : 'flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none'
+          }
+        >
           {filteredChannels.map((ch) => {
             const isSelected = selectedChannelId === ch.id;
             return (
-              <div
+              <button
                 key={ch.id}
                 onClick={() => {
                   setSelectedChannelId(ch.id);
-                  setActiveTab('creator-videos');
-                  setTimeout(() => {
-                    const el = document.getElementById('creator-spotlight-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                  }, 40);
+                  setSelectedPlaylistId('all');
                 }}
-                className={`relative group p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center text-center ${
+                className={`relative group text-left rounded-2xl border transition-all cursor-pointer flex items-center gap-2.5 ${
+                  showAllGrid ? 'p-2.5 flex-col text-center' : 'px-3 py-2 shrink-0 min-w-[175px] max-w-[210px]'
+                } ${
                   isSelected
-                    ? 'bg-rose-500/15 border-rose-500 shadow-lg shadow-rose-500/20 scale-[1.02]'
-                    : 'bg-white dark:bg-slate-900/60 border-gray-200 dark:border-white/10 hover:border-rose-400/50 hover:bg-rose-50/50 dark:hover:bg-slate-800'
+                    ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-500 ring-1 ring-indigo-500/30 shadow-sm'
+                    : 'bg-white dark:bg-[#111116] border-slate-200 dark:border-white/[0.08] hover:border-indigo-500/40'
                 }`}
               >
-                {/* Delete button for custom channels */}
                 {ch.id.startsWith('chan-') && (
-                  <button
+                  <span
                     onClick={(e) => handleRemoveChannel(ch.id, e)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-md text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="absolute top-1.5 right-1.5 p-1 rounded-md text-slate-400 hover:text-rose-500"
                     title="Remove tracked channel"
                   >
-                    <Trash2 size={12} />
-                  </button>
+                    <Trash2 size={11} />
+                  </span>
                 )}
-
-                {/* Real YouTube Avatar circle */}
-                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-rose-400/50 shadow-md mb-2 bg-gradient-to-tr from-rose-900 to-indigo-900 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full overflow-hidden border border-slate-200 dark:border-white/15 shrink-0 bg-zinc-900">
                   <img
                     src={ch.avatarUrl || resolveCreatorAvatar(ch.name, ch.handle)}
                     alt={ch.name}
@@ -1116,202 +1255,171 @@ export function ChannelHub({
                     }}
                   />
                 </div>
-
-                <h4 className="text-xs font-bold text-gray-900 dark:text-white truncate w-full">{ch.name}</h4>
-                <p className="text-[10px] text-rose-500 dark:text-rose-300 font-mono truncate w-full">{ch.handle}</p>
-                <span className="text-[9px] text-gray-400 mt-1 truncate">{ch.domain}</span>
-              </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold truncate">{ch.name}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-zinc-400 truncate font-mono">
+                    {ch.handle}
+                  </div>
+                </div>
+              </button>
             );
           })}
         </div>
-      </div>
+      )}
 
-      {/* Selected Creator Spotlight & Tabs */}
+      {/* Selected Creator Spotlight (Visible Immediately Above the Fold) */}
       {activeChannel && (
-        <div id="creator-spotlight-section" className="rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/20 via-slate-900/80 to-purple-950/20 p-5 backdrop-blur-xl shadow-xl space-y-5">
-          {/* Creator Profile Header */}
-          <div className="flex flex-col gap-4 pb-4 border-b border-white/10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-rose-400 shadow-xl shrink-0 bg-gradient-to-tr from-rose-900 to-indigo-900">
-                  <img
-                    src={activeChannel.avatarUrl || resolveCreatorAvatar(activeChannel.name, activeChannel.handle)}
-                    alt={activeChannel.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      const cleanHandle = (activeChannel.handle || activeChannel.name).replace('@', '');
-                      target.src = `https://unavatar.io/youtube/@${cleanHandle}`;
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-extrabold text-white">{activeChannel.name}</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold border border-rose-500/40">
-                      {activeChannel.handle}
-                    </span>
-                    <span className="text-xs text-gray-400 font-medium">({activeChannel.subscriberCount})</span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-1 max-w-2xl">{activeChannel.description}</p>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap text-[11px]">
-                    <span className="px-2.5 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold">
-                      Domain: {activeChannel.domain}
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-purple-300 font-bold">
-                      Category: {activeChannel.category}
-                    </span>
-                  </div>
-                </div>
+        <div
+          id="creator-spotlight-section"
+          className="rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#111116] p-4 sm:p-6 shadow-sm space-y-5"
+        >
+          {/* Spotlight Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/[0.08]">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/15 shrink-0 bg-zinc-900">
+                <img
+                  src={activeChannel.avatarUrl || resolveCreatorAvatar(activeChannel.name, activeChannel.handle)}
+                  alt={activeChannel.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    const cleanHandle = (activeChannel.handle || activeChannel.name).replace('@', '');
+                    target.src = `https://unavatar.io/youtube/@${cleanHandle}`;
+                  }}
+                />
               </div>
-
-              {/* Tab Switchers: All Videos First, Playlists, Same-Type Recommendations */}
-              <div className="flex items-center gap-2 bg-black/60 p-1.5 rounded-xl border border-white/10 shrink-0 self-start sm:self-auto flex-wrap">
-                <button
-                  onClick={() => setActiveTab('creator-videos')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                    activeTab === 'creator-videos'
-                      ? 'bg-gradient-to-r from-rose-600 to-pink-600 border-rose-400 text-white shadow-lg ring-2 ring-rose-400/40'
-                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10 hover:border-rose-400/40'
-                  }`}
-                  title={`View all ${channelVideos.length} videos from ${activeChannel.name}`}
-                >
-                  <Tv size={14} className={activeTab === 'creator-videos' ? 'text-white' : 'text-rose-400'} />
-                  <span>All Videos ({channelVideos.length})</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('playlists')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'playlists'
-                      ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <ListVideo size={14} />
-                  <span>Playlists & Series ({activeChannelPlaylists.length})</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('affinity-videos')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'affinity-videos'
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Sparkles size={13} className="text-amber-300" />
-                  <span>Same Types of Videos ({sameTypesOfVideos.length})</span>
-                </button>
-
-                <button
-                  onClick={handleReloadAllVideos}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-white/5 hover:bg-emerald-600/30 text-emerald-300 hover:text-white border border-emerald-500/30"
-                  title="Reload all videos, curriculum episodes & playlists from complete YouTube catalog"
-                >
-                  <RotateCcw size={12} />
-                  <span>Reload Videos</span>
-                </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-lg sm:text-xl font-bold tracking-tight">{activeChannel.name}</h3>
+                  <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400">
+                    {activeChannel.handle}
+                  </span>
+                  {activeChannel.subscriberCount && (
+                    <span className="text-xs text-slate-500 dark:text-zinc-400">
+                      • {activeChannel.subscriberCount}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 max-w-2xl line-clamp-2">
+                  {activeChannel.description}
+                </p>
+                <div className="flex items-center gap-2 mt-2 flex-wrap text-[11px]">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-zinc-300 font-medium">
+                    {activeChannel.domain}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-medium">
+                    {activeChannel.category}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Add Video to This Creator Form */}
-            <form onSubmit={handleAddVideoToCreator} className="flex gap-2 pt-2">
-              <input
-                type="text"
-                value={customVideoUrl}
-                onChange={(e) => setCustomVideoUrl(e.target.value)}
-                placeholder={`Paste any YouTube video link to add directly to ${activeChannel.name}...`}
-                className="flex-1 px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder-gray-400 outline-none focus:border-rose-400"
-              />
+            {/* Clean Segmented Control */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#09090b] p-1 rounded-xl border border-slate-200 dark:border-white/[0.08] self-start lg:self-auto flex-wrap">
               <button
-                type="submit"
-                disabled={!customVideoUrl.trim()}
-                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors disabled:opacity-40 flex items-center gap-1 shrink-0 cursor-pointer"
+                onClick={() => setActiveTab('creator-videos')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'creator-videos'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
-                <Plus size={12} />
-                <span>Add Video</span>
+                <Tv size={13} />
+                <span>Videos ({channelVideos.length})</span>
               </button>
+
               <button
-                type="button"
+                onClick={() => setActiveTab('playlists')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'playlists'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <ListVideo size={13} />
+                <span>Playlists ({activeChannelPlaylists.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('affinity-videos')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'affinity-videos'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Sparkles size={13} />
+                <span>Related ({sameTypesOfVideos.length})</span>
+              </button>
+
+              <button
                 onClick={handleReloadAllVideos}
-                className="px-3.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-                title="Reload full video catalog for this creator"
+                className="p-1.5 rounded-lg text-slate-500 dark:text-zinc-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                title="Refresh creator catalog"
               >
-                <RotateCcw size={12} />
-                <span>Reload Catalog</span>
+                <RotateCcw size={13} />
               </button>
-            </form>
+            </div>
           </div>
 
-          {/* Tab 1: Playlists & Series View (Visible Immediately by Default) */}
+          {/* Inline Paste YouTube URL Bar */}
+          <form onSubmit={handleAddVideoToCreator} className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={customVideoUrl}
+              onChange={(e) => setCustomVideoUrl(e.target.value)}
+              placeholder={`Paste any YouTube URL to add to ${activeChannel.name}...`}
+              className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#09090b] border border-slate-200 dark:border-white/[0.08] text-xs placeholder-slate-400 dark:placeholder-zinc-500 outline-none focus:border-indigo-500 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={!customVideoUrl.trim()}
+              className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white/[0.08] hover:bg-slate-800 dark:hover:bg-white/[0.14] text-white text-xs font-medium transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Plus size={13} />
+              <span>Add Video</span>
+            </button>
+          </form>
+
+          {/* Tab: Playlists & Series */}
           {activeTab === 'playlists' && (
             <div className="space-y-5">
-              {/* Header and Playlist Curriculum Switcher */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/10">
-                <div>
-                  <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <ListVideo size={14} className="text-rose-400" />
-                    <span>Curated Series & Playlists from {activeChannel.name}</span>
-                  </h4>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
-                    Select a playlist series below to view and stream all episodes in sequential curriculum order.
-                  </p>
-                </div>
-                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 shrink-0">
-                  <ShieldCheck size={12} />
-                  Ad-Free Sequential Player
-                </span>
-              </div>
-
-              {/* Playlist Filter Selector Pills */}
               {activeChannelPlaylists.length > 0 && (
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                   <button
                     onClick={() => setSelectedPlaylistId('all')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 cursor-pointer border ${
                       selectedPlaylistId === 'all'
-                        ? 'bg-rose-600 text-white shadow-md'
-                        : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 dark:bg-[#09090b] text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-white/[0.08]'
                     }`}
                   >
-                    All Playlists ({activeChannelPlaylists.length})
+                    All Series ({activeChannelPlaylists.length})
                   </button>
                   {activeChannelPlaylists.map((pl) => (
                     <button
                       key={pl.id}
                       onClick={() => setSelectedPlaylistId(pl.id)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1.5 cursor-pointer border ${
                         selectedPlaylistId === pl.id
-                          ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-md'
-                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-slate-50 dark:bg-[#09090b] text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-white/[0.08]'
                       }`}
                     >
-                      <ListVideo size={13} />
-                      <span className="truncate max-w-[240px]">{pl.title}</span>
-                      <span className="px-1.5 py-0.2 rounded bg-black/40 text-[10px] text-rose-200">
-                        {pl.videos.length} Ep
-                      </span>
+                      <ListVideo size={12} />
+                      <span className="truncate max-w-[200px]">{pl.title}</span>
+                      <span className="text-[10px] opacity-75">({pl.videos.length})</span>
                     </button>
                   ))}
-
-                  <button
-                    onClick={() => setActiveTab('creator-videos')}
-                    className="ml-auto px-3 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600 border border-rose-400/50 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-md"
-                    title={`Switch to full grid of all ${channelVideos.length} videos`}
-                  >
-                    <Tv size={12} />
-                    <span>View All {channelVideos.length} Videos &rarr;</span>
-                  </button>
                 </div>
               )}
 
               {displayedPlaylists.length === 0 ? (
-                <div className="text-center py-10 border border-dashed border-white/15 rounded-2xl bg-white/[0.01] p-6 space-y-2">
-                  <ListVideo size={32} className="text-gray-500 mx-auto" />
-                  <p className="text-sm font-bold text-white">No playlists saved yet for {activeChannel.name}</p>
-                  <p className="text-xs text-gray-400 max-w-md mx-auto">
-                    You can paste any YouTube playlist link in the tracking bar above to track full courses from {activeChannel.name}.
+                <div className="text-center py-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-2">
+                  <ListVideo size={28} className="text-slate-400 mx-auto" />
+                  <p className="text-sm font-semibold">No playlists saved for {activeChannel.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+                    Use &ldquo;Track Channel&rdquo; above with a YouTube playlist link to import episodes.
                   </p>
                 </div>
               ) : (
@@ -1319,176 +1427,43 @@ export function ChannelHub({
                   {displayedPlaylists.map((pl) => (
                     <div
                       key={pl.id}
-                      className="rounded-2xl border border-rose-500/25 bg-slate-900/90 p-5 space-y-4 shadow-xl"
+                      className="rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-slate-50/60 dark:bg-[#09090b]/60 p-4 sm:p-5 space-y-4"
                     >
-                      {/* Playlist Banner Header */}
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          {/* Thumbnail Stack */}
-                          <div
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/[0.08]">
+                        <div className="min-w-0">
+                          <h4
                             onClick={() => handlePlayEntirePlaylist(pl)}
-                            className="w-24 sm:w-28 h-18 sm:h-20 rounded-xl bg-black overflow-hidden relative shrink-0 cursor-pointer shadow group border border-rose-500/30"
+                            className="text-sm sm:text-base font-bold hover:text-indigo-500 cursor-pointer transition-colors"
                           >
-                            <img
-                              src={pl.thumbnailUrl || (pl.videos[0] && pl.videos[0].thumbnailUrl) || 'https://i.ytimg.com/vi/1vsmaEfbnoE/hqdefault.jpg'}
-                              alt={pl.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                              <div className="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg">
-                                <Play size={14} fill="white" className="ml-0.5" />
-                              </div>
-                            </div>
-                            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/90 text-[9px] font-bold text-white flex items-center gap-1">
-                              <ListVideo size={10} />
-                              <span>{pl.videoCount || pl.videos.length} Videos</span>
-                            </div>
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[9px] font-bold border border-rose-500/30 flex items-center gap-1">
-                                <ListVideo size={10} /> PLAYLIST COURSE ({pl.videoCount || pl.videos.length} Episodes)
-                              </span>
-                              <span className="text-[11px] text-gray-400 font-mono">{pl.channelName}</span>
-                            </div>
-                            <h4
-                              onClick={() => handlePlayEntirePlaylist(pl)}
-                              className="text-sm sm:text-base font-extrabold text-white mt-1 hover:text-rose-300 cursor-pointer transition-colors"
-                            >
-                              {pl.title}
-                            </h4>
-                            <p className="text-xs text-gray-300 mt-0.5 line-clamp-2 max-w-2xl">{pl.description}</p>
-                          </div>
+                            {pl.title}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1">
+                            {pl.videos.length} episodes • {pl.description}
+                          </p>
                         </div>
 
-                        {/* Action: Play entire series button & Delete Playlist button */}
-                        <div className="shrink-0 self-start md:self-auto flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <button
                             onClick={() => handlePlayEntirePlaylist(pl)}
-                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Play size={14} fill="currentColor" />
-                            <span>Play Entire Series Ad-Free</span>
+                            <Play size={13} fill="currentColor" />
+                            <span>Play Series</span>
                           </button>
                           <button
                             onClick={() => handleDeletePlaylist(pl.id, pl.title)}
-                            className="p-2.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 transition-colors cursor-pointer"
-                            title="Delete this entire playlist"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                            title="Delete playlist"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
 
-                      {/* Course Curriculum Episodes Grid (ALWAYS VISIBLE!) */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-rose-300/80 flex items-center gap-1.5">
-                            <span>Playlist Lessons & Episodes ({pl.videos.length})</span>
-                          </span>
-                          <span className="text-[10px] text-gray-400">Click any episode to start streaming</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                          {pl.videos.map((vid, idx) => (
-                            <div
-                              key={vid.id || vid.videoId}
-                              className="group rounded-2xl border border-white/10 bg-black/40 hover:border-rose-400/50 hover:bg-rose-950/20 hover:shadow-xl hover:shadow-rose-500/10 transition-all p-3 flex flex-col justify-between"
-                            >
-                              <div>
-                                <div
-                                  onClick={() =>
-                                    onPlayInModal &&
-                                    onPlayInModal({
-                                      ...vid,
-                                      playlistId: pl.playlistId,
-                                      playlistTitle: pl.title,
-                                    })
-                                  }
-                                  className="w-full h-32 rounded-xl bg-black overflow-hidden relative mb-2.5 cursor-pointer shadow group-hover:shadow-lg transition-shadow"
-                                >
-                                  <img
-                                    src={vid.thumbnailUrl || `https://i.ytimg.com/vi/${vid.videoId}/hqdefault.jpg`}
-                                    alt={vid.title}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    onError={(e) => {
-                                      e.currentTarget.src = `https://img.youtube.com/vi/${vid.videoId}/0.jpg`;
-                                    }}
-                                  />
-                                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
-                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
-                                      <Play size={18} fill="white" className="ml-0.5" />
-                                    </div>
-                                  </div>
-
-                                  {/* Episode # Badge */}
-                                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-rose-600 text-[10px] font-mono font-extrabold text-white shadow">
-                                    EP {String(idx + 1).padStart(2, '0')}
-                                  </span>
-
-                                  {/* Duration Badge */}
-                                  {vid.duration && (
-                                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/90 text-[10px] font-mono text-white">
-                                      {Math.floor(vid.duration / 60)}:{String(vid.duration % 60).padStart(2, '0')}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                  {vid.category}
-                                </span>
-
-                                <h5
-                                  onClick={() =>
-                                    onPlayInModal &&
-                                    onPlayInModal({
-                                      ...vid,
-                                      playlistId: pl.playlistId,
-                                      playlistTitle: pl.title,
-                                    })
-                                  }
-                                  className="text-xs font-bold text-white mt-1.5 line-clamp-2 hover:text-rose-300 cursor-pointer"
-                                  title={vid.title}
-                                >
-                                  {vid.title}
-                                </h5>
-                              </div>
-
-                              <div className="pt-2 mt-2 border-t border-white/10 flex items-center justify-between">
-                                <span className="text-[10px] text-gray-400 font-mono">Episode {idx + 1}</span>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteVideo(vid.id || vid.videoId, vid.title, pl.id);
-                                    }}
-                                    className="p-1 rounded-md text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                                    title="Delete episode"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
-                                  {onPlayInModal && (
-                                    <button
-                                      onClick={() =>
-                                        onPlayInModal({
-                                          ...vid,
-                                          playlistId: pl.playlistId,
-                                          playlistTitle: pl.title,
-                                        })
-                                      }
-                                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all shadow flex items-center gap-1 cursor-pointer"
-                                    >
-                                      <Play size={10} fill="currentColor" />
-                                      <span>Play Ad-Free</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {pl.videos.map((vid, idx) =>
+                          renderVideoCard(vid, { episodeIndex: idx, playlistContext: pl })
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1497,200 +1472,39 @@ export function ChannelHub({
             </div>
           )}
 
-          {/* Tab 2: Creator All Videos View */}
+          {/* Tab: All Videos */}
           {activeTab === 'creator-videos' && (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5">
-                  <Tv size={14} className="text-rose-400" />
-                  <span>All Videos from {activeChannel.name} (Ad-Free Portal Mode)</span>
-                </span>
-                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                  <ShieldCheck size={12} />
-                  Zero commercial interruptions
-                </span>
-              </div>
-
               {channelVideos.length === 0 ? (
-                <div className="text-center py-10 border border-dashed border-white/15 rounded-2xl bg-white/[0.01] p-6 space-y-2">
-                  <Tv size={28} className="text-gray-500 mx-auto" />
-                  <p className="text-sm font-bold text-white">No videos attached yet for {activeChannel.name}</p>
-                  <p className="text-xs text-gray-400 max-w-md mx-auto">
-                    Paste any YouTube video link into the box above to immediately add and watch it ad-free.
+                <div className="text-center py-10 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-2">
+                  <Tv size={28} className="text-slate-400 mx-auto" />
+                  <p className="text-sm font-semibold">No videos attached yet for {activeChannel.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">
+                    Paste any YouTube video URL above to add and stream immediately.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {channelVideos.map((vid) => (
-                    <div
-                      key={vid.id}
-                      className="group rounded-2xl border border-white/10 bg-slate-900/80 hover:border-rose-400/50 hover:shadow-xl hover:shadow-rose-500/10 transition-all p-3.5 flex flex-col justify-between"
-                    >
-                      <div>
-                        <div
-                          onClick={() => onPlayInModal && onPlayInModal(vid)}
-                          className="w-full h-36 rounded-xl bg-black overflow-hidden relative mb-2.5 cursor-pointer shadow group-hover:shadow-lg transition-shadow"
-                        >
-                          <img
-                            src={vid.thumbnailUrl || `https://i.ytimg.com/vi/${vid.videoId}/hqdefault.jpg`}
-                            alt={vid.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.src = `https://img.youtube.com/vi/${vid.videoId}/0.jpg`;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
-                              <Play size={18} fill="white" className="ml-0.5" />
-                            </div>
-                          </div>
-                          <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-emerald-600 text-[9px] font-bold text-white flex items-center gap-1 shadow">
-                            <ShieldCheck size={10} /> Ad-Free
-                          </span>
-                          {vid.duration && (
-                            <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.2 rounded bg-black/80 text-[9px] font-mono text-white">
-                              {Math.floor(vid.duration / 60)}:{String(vid.duration % 60).padStart(2, '0')}
-                            </span>
-                          )}
-                        </div>
-
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                          {vid.category}
-                        </span>
-
-                        <h4
-                          onClick={() => onPlayInModal && onPlayInModal(vid)}
-                          className="text-xs font-bold text-white mt-1.5 line-clamp-2 hover:text-rose-300 cursor-pointer"
-                        >
-                          {vid.title}
-                        </h4>
-                      </div>
-
-                      <div className="pt-2.5 mt-2 border-t border-white/10 flex items-center justify-between">
-                        <span className="text-[10px] text-gray-400">{vid.channel}</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteVideo(vid.id || vid.videoId, vid.title);
-                            }}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                            title="Delete video"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                          {onPlayInModal && (
-                            <button
-                              onClick={() => onPlayInModal(vid)}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all shadow flex items-center gap-1 cursor-pointer"
-                            >
-                              <Play size={10} fill="currentColor" />
-                              <span>Play Ad-Free</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {channelVideos.map((vid) => renderVideoCard(vid))}
                 </div>
               )}
             </div>
           )}
 
-          {/* Tab 3: Same Types of Videos (Affinity Recommendations) */}
+          {/* Tab: Related Stack Videos */}
           {activeTab === 'affinity-videos' && (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <span className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-amber-400" />
-                    <span>Same Types of Videos (Matched to {activeChannel.name}&apos;s Stack)</span>
-                  </span>
-                  <p className="text-[11px] text-gray-400">
-                    Recommendations based on {activeChannel.category} and related affinity categories across the 57 taxonomy topics.
-                  </p>
+              {sameTypesOfVideos.length === 0 ? (
+                <div className="text-center py-10 text-xs text-slate-500 dark:text-zinc-400">
+                  No related videos found for this stack yet.
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sameTypesOfVideos.map((vid) => (
-                  <div
-                    key={vid.id}
-                    className="group rounded-2xl border border-purple-500/30 bg-slate-900/80 hover:border-purple-400/60 hover:shadow-xl hover:shadow-purple-500/10 transition-all p-3.5 flex flex-col justify-between"
-                  >
-                    <div>
-                      <div
-                        onClick={() => onPlayInModal && onPlayInModal(vid)}
-                        className="w-full h-36 rounded-xl bg-black overflow-hidden relative mb-2.5 cursor-pointer shadow group-hover:shadow-lg transition-shadow"
-                      >
-                        <img
-                          src={vid.thumbnailUrl || `https://i.ytimg.com/vi/${vid.videoId}/hqdefault.jpg`}
-                          alt={vid.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.src = `https://img.youtube.com/vi/${vid.videoId}/0.jpg`;
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
-                            <Play size={18} fill="white" className="ml-0.5" />
-                          </div>
-                        </div>
-                        <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-purple-600 text-[9px] font-bold text-white flex items-center gap-1 shadow">
-                          <Sparkles size={10} /> Same Topic
-                        </span>
-                        {vid.duration && (
-                          <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.2 rounded bg-black/80 text-[9px] font-mono text-white">
-                            {Math.floor(vid.duration / 60)}:{String(vid.duration % 60).padStart(2, '0')}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                          {vid.category}
-                        </span>
-                      </div>
-
-                      <h4
-                        onClick={() => onPlayInModal && onPlayInModal(vid)}
-                        className="text-xs font-bold text-white line-clamp-2 hover:text-purple-300 cursor-pointer"
-                      >
-                        {vid.title}
-                      </h4>
-                    </div>
-
-                    <div className="pt-2.5 mt-2 border-t border-white/10 flex items-center justify-between">
-                      <span className="text-[10px] text-gray-400">{vid.channel}</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteVideo(vid.id || vid.videoId, vid.title);
-                          }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          title="Delete recommendation"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                        {onPlayInModal && (
-                          <button
-                            onClick={() => onPlayInModal(vid)}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all shadow flex items-center gap-1 cursor-pointer"
-                          >
-                            <Play size={10} fill="currentColor" />
-                            <span>Play Ad-Free</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sameTypesOfVideos.map((vid) =>
+                    renderVideoCard(vid, { accentTag: 'Related Stack' })
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1698,14 +1512,14 @@ export function ChannelHub({
 
       {/* Undo Delete Toast */}
       {deleteToast && (
-        <div className="fixed bottom-6 right-6 z-[99999] px-4 py-3 rounded-2xl bg-slate-900 border border-red-500/50 text-white shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
-          <Trash2 size={16} className="text-red-400 shrink-0" />
+        <div className="fixed bottom-6 right-6 z-[99999] px-4 py-3 rounded-2xl bg-zinc-900 border border-white/15 text-white shadow-2xl flex items-center gap-3">
+          <Trash2 size={15} className="text-rose-400 shrink-0" />
           <span className="text-xs font-medium truncate max-w-xs">
-            Deleted &ldquo;{deleteToast.title}&rdquo;
+            Removed &ldquo;{deleteToast.title}&rdquo;
           </span>
           <button
             onClick={handleUndoDelete}
-            className="ml-2 px-2.5 py-1 rounded-lg bg-red-600/30 hover:bg-red-600 text-red-200 hover:text-white border border-red-500/40 text-xs font-bold transition-all cursor-pointer shrink-0"
+            className="ml-2 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold transition-colors cursor-pointer shrink-0"
           >
             Undo
           </button>

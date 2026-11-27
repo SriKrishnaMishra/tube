@@ -123,7 +123,9 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('app-theme', theme);
-    document.documentElement.classList.toggle('dark', theme !== 'light');
+    const isLight = theme === 'light';
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(isLight ? 'light' : 'dark');
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
@@ -233,10 +235,10 @@ export default function App() {
           <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/5">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">R</span>
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
+                  <span className="text-white text-sm font-bold">D</span>
                 </div>
-                <span className="font-semibold text-lg">RecTracker</span>
+                <span className="font-semibold text-lg tracking-tight">DevTube</span>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -280,19 +282,22 @@ export default function App() {
 
           {/* Main content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <header className={`relative z-[100] h-16 border-b flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 ${currentThemeDef.headerBgClass} backdrop-blur-xl`}>
+            <header className={`relative z-[100] h-16 border-b flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5 lg:px-6 ${currentThemeDef.headerBgClass} backdrop-blur-xl`}>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-white/5"
+                  className="lg:hidden p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  aria-label="Open navigation menu"
                 >
                   <Menu size={20} />
                 </button>
-                <h1 className="text-sm font-bold capitalize hidden md:block text-white">{activeTab}</h1>
+                <h1 className="text-sm font-semibold capitalize hidden md:block tracking-tight">
+                  {activeTab === 'channels' ? 'Channels & Playlists' : activeTab === 'browser' ? 'Content Browser' : activeTab}
+                </h1>
               </div>
 
               {/* Real-time Global Search */}
-              <div className="flex-1 min-w-0 max-w-lg mx-1 sm:mx-3">
+              <div className="flex-1 min-w-0 max-w-xl mx-1 sm:mx-3">
                 <GlobalSearch
                   records={records}
                   onPlayInModal={(rec) => setActiveModalVideo(rec)}
@@ -303,27 +308,21 @@ export default function App() {
                 />
               </div>
 
-              {/* Right Action Bar (Clean & Streamlined) */}
+              {/* Right Action Bar */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={loadAllCatalogRecords}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-600/15 hover:bg-emerald-600/30 text-emerald-300 hover:text-white transition-colors font-medium flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
-                  title="Reload and re-sync all YouTube videos and channels"
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
+                  title="Sync and reload catalog"
                 >
-                  <RotateCcw size={12} />
-                  <span className="hidden lg:inline">Reload Videos</span>
+                  <RotateCcw size={13} className="text-emerald-500" />
+                  <span className="hidden lg:inline">Sync</span>
                 </button>
                 <NotificationCenter />
                 <ThemeSelector currentTheme={theme} onSelectTheme={setTheme} />
-                <button
-                  onClick={() => setActiveTab('landing')}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors font-medium hidden sm:inline-block shrink-0"
-                >
-                  Home
-                </button>
               </div>
             </header>
-            <main className="relative z-10 isolate flex-1 overflow-y-auto p-4 lg:p-6">
+            <main className="relative z-10 isolate flex-1 overflow-y-auto p-3 sm:p-5 lg:p-7">
               {renderContent()}
             </main>
           </div>
