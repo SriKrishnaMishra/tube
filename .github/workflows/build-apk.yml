@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup Java 17 (Android Gradle Requirement)
+      - name: Setup Java 17 (Capacitor 6 Requirement)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -29,9 +32,9 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install Capacitor & Generate Android Project
+      - name: Install Capacitor 6 & Generate Android Project
         run: |
-          npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+          npm install --no-save @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0
           npx cap add android
           npx cap sync android
 
@@ -39,11 +42,22 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload DevTube Android APK
+      - name: Upload DevTube Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DevTube-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
+
+      - name: Publish Public APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk DevTube.apk
+          if gh release view v1.0-apk >/dev/null 2>&1; then
+            gh release upload v1.0-apk DevTube.apk --clobber
+          else
+            gh release create v1.0-apk DevTube.apk --title "DevTube Android APK" --notes "Standalone Android APK for DevTube — works 24/7 even when laptop is off." --latest
+          fi

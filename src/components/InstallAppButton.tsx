@@ -452,11 +452,11 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                         <span>Android APK (Works When Laptop Is Off)</span>
                       </div>
                       <p className="text-[11px] text-gray-300 mt-0.5">
-                        Download <code className="text-indigo-300 font-mono">DevTube-Android-APK</code> from GitHub Actions to run 100% standalone on Android.
+                        Download <code className="text-indigo-300 font-mono">DevTube.apk</code> directly to run 100% standalone on Android.
                       </p>
                     </div>
                     <a
-                      href="https://github.com/SriKrishnaMishra/tube/actions/workflows/build-apk.yml"
+                      href="https://github.com/SriKrishnaMishra/tube/releases/latest/download/DevTube.apk"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shrink-0 flex items-center gap-1"
