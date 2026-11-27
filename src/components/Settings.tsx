@@ -115,7 +115,7 @@ export function Settings({ onClear, theme, onToggleTheme }: SettingsProps) {
       <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2 text-indigo-300">
           <Download size={16} className="text-indigo-400" />
-          Install RecTracker AI on Your Laptop
+          Install DevTube on Your Laptop
         </h3>
         <p className="text-xs text-gray-400 mb-4">
           Convert this web project into a standalone desktop application with its own icon on your taskbar and desktop.

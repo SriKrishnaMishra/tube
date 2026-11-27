@@ -462,7 +462,7 @@ export function InstallAppButton({ className = '', variant = 'sidebar' }: Instal
                       )}
                     </div>
                     <p className="text-xs text-gray-300 leading-relaxed">
-                      Click the <strong>Install App icon (🖥️ ⬇️)</strong> in your browser address bar (top right) or menu ⋮ → <strong>&quot;Install RecTracker as app&quot;</strong>.
+                      Click the <strong>Install App icon (🖥️ ⬇️)</strong> in your browser address bar (top right) or menu ⋮ → <strong>&quot;Install DevTube as app&quot;</strong>.
                     </p>
                     <p className="text-[10px] text-emerald-400 mt-2 font-semibold">
                       ✓ Creates desktop shortcut & runs in distraction-free window without browser tabs.

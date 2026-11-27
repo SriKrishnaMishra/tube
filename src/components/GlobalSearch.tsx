@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Play, ExternalLink, X, Flame, ShieldCheck, Globe, Link2, Sparkles, ListVideo, UserCheck } from 'lucide-react';
 import { ContentRecord } from '../types';
 import { RealtimeSearchEngine, SearchResult } from '../searchEngine';
-import { extractYouTubeVideoId, fetchYouTubeOEmbed } from '../universalYouTubeSearch';
+import { extractYouTubeVideoId, fetchYouTubeOEmbed, searchUniversalYouTube } from '../universalYouTubeSearch';
 
 interface GlobalSearchProps {
   records: ContentRecord[];
@@ -32,6 +32,8 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [fetchedMeta, setFetchedMeta] = useState<{ title: string; author: string } | null>(null);
+  const [liveResults, setLiveResults] = useState<ContentRecord[]>([]);
+  const [isSearchingLive, setIsSearchingLive] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +45,11 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
   // Check if query is or contains a YouTube URL or direct 11-char ID
   const directVideoId = useMemo(() => {
     return extractYouTubeVideoId(query);
+  }, [query]);
+
+  // Clear live results when query changes
+  useEffect(() => {
+    setLiveResults([]);
   }, [query]);
 
   // Fetch oEmbed title if direct video ID is pasted
@@ -178,12 +185,21 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleInstantRedirect = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setIsOpen(false);
+  const handleLiveYouTubeSearch = async (searchText: string) => {
+    if (!searchText.trim()) return;
+    setIsSearchingLive(true);
+    try {
+      const found = await searchUniversalYouTube(searchText.trim());
+      setLiveResults(found);
+      if (found.length > 0 && onPlayInModal) {
+        // Keep dropdown open if multiple results, or let user click
+      }
+    } finally {
+      setIsSearchingLive(false);
+    }
   };
 
-  // Handle immediate play or redirect on Enter
+  // Handle immediate play in modal on Enter
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -191,14 +207,16 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
         const target = results[selectedIndex] || results[0];
         if (onPlayInModal) {
           onPlayInModal(target.record);
-        } else {
-          handleInstantRedirect(target.directYouTubeUrl);
         }
+        setIsOpen(false);
+      } else if (liveResults.length > 0) {
+        if (onPlayInModal) {
+          onPlayInModal(liveResults[0]);
+        }
+        setIsOpen(false);
       } else if (query.trim()) {
-        const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query.trim())}`;
-        window.open(youtubeSearchUrl, '_blank', 'noopener,noreferrer');
+        handleLiveYouTubeSearch(query);
       }
-      setIsOpen(false);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) => (prev + 1) % Math.max(1, results.length));
@@ -261,8 +279,6 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
                   const target = results[0];
                   if (onPlayInModal) {
                     onPlayInModal(target.record);
-                  } else {
-                    handleInstantRedirect(target.directYouTubeUrl);
                   }
                   setIsOpen(false);
                 }
@@ -359,20 +375,50 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
           {/* Results List */}
           <div className="max-h-84 overflow-y-auto p-2 space-y-1.5 bg-[#0d0f1e]">
             {results.length === 0 ? (
-              <div className="p-6 text-center text-gray-400">
-                <p className="text-xs font-semibold text-white mb-1">No exact local video match</p>
-                <p className="text-[11px] text-gray-400 mb-3">Press Enter to search directly across all of YouTube with 0 ads.</p>
-                <button
-                  onClick={() => {
-                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-                    window.open(searchUrl, '_blank', 'noopener,noreferrer');
-                    setIsOpen(false);
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-md"
-                >
-                  <Globe size={13} />
-                  <span>Search All of YouTube for &quot;{query}&quot;</span>
-                </button>
+              <div className="p-4 text-center text-gray-400">
+                {liveResults.length > 0 ? (
+                  <div className="space-y-1.5 text-left">
+                    <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider px-2 pb-1">
+                      Live YouTube Results (Click to Stream In-Portal)
+                    </p>
+                    {liveResults.slice(0, 6).map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (onPlayInModal) onPlayInModal(item);
+                          setIsOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-indigo-600/20 cursor-pointer transition-colors border border-transparent hover:border-indigo-500/30"
+                      >
+                        <img
+                          src={item.thumbnailUrl || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`}
+                          alt={item.title}
+                          className="w-16 h-10 rounded-lg object-cover bg-black shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-white truncate">{item.title}</p>
+                          <p className="text-[10px] text-gray-400 truncate">{item.channel} • 0 Ads In-Portal</p>
+                        </div>
+                        <span className="px-2 py-1 rounded-lg bg-emerald-600/20 text-emerald-400 text-[10px] font-bold shrink-0">
+                          ▶ Play
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-3">
+                    <p className="text-xs font-semibold text-white mb-1">No exact local video match</p>
+                    <p className="text-[11px] text-gray-400 mb-3">Search live YouTube directly inside DevTube with 0 ads.</p>
+                    <button
+                      onClick={() => handleLiveYouTubeSearch(query)}
+                      disabled={isSearchingLive}
+                      className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-md"
+                    >
+                      <Globe size={13} />
+                      <span>{isSearchingLive ? 'Searching Live YouTube...' : `Search Live YouTube for "${query}"`}</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               results.map((res, index) => {
@@ -385,8 +431,6 @@ export function GlobalSearch({ records, onPlayInModal, onOpenCreator }: GlobalSe
                     onClick={() => {
                       if (onPlayInModal) {
                         onPlayInModal(res.record);
-                      } else {
-                        handleInstantRedirect(res.directYouTubeUrl);
                       }
                       setIsOpen(false);
                     }}

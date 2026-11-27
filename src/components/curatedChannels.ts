@@ -1511,15 +1511,15 @@ export const DEFAULT_CURATED_PLAYLISTS: Record<string, ChannelPlaylist[]> = {
       ]
     }
   ],
-  'aleksa-gordic': [
+  'ai-epiphany': [
     {
-      id: 'pl-aleksa-gordic-masterclass',
-      channelId: 'aleksa-gordic',
+      id: 'pl-ai-epiphany-masterclass',
+      channelId: 'ai-epiphany',
       channelName: 'Aleksa Gordić - The AI Epiphany',
       title: 'Transformer Architecture & Deep Learning Code Reviews',
       description: 'Hand-picked, high-impact curriculum from Aleksa Gordić - The AI Epiphany covering Deep Learning (CNN, RNN, Transformers).',
-      playlistId: 'PL-aleksa-gordic',
-      playlistUrl: 'https://www.youtube.com/@aleksa-gordic',
+      playlistId: 'PL-ai-epiphany',
+      playlistUrl: 'https://www.youtube.com/@TheAIEpiphany',
       thumbnailUrl: 'https://i.ytimg.com/vi/U0s0f995w14/hqdefault.jpg',
       videoCount: 2,
       videos: [
@@ -2576,15 +2576,15 @@ export const DEFAULT_CURATED_PLAYLISTS: Record<string, ChannelPlaylist[]> = {
       ]
     }
   ],
-  'designcourse': [
+  'design-course': [
     {
-      id: 'pl-designcourse-masterclass',
-      channelId: 'designcourse',
+      id: 'pl-design-course-masterclass',
+      channelId: 'design-course',
       channelName: 'DesignCourse',
       title: 'UI/UX Design Systems & Frontend Animations',
       description: 'Hand-picked, high-impact curriculum from DesignCourse covering CSS, animations & design systems.',
-      playlistId: 'PL-designcourse',
-      playlistUrl: 'https://www.youtube.com/@designcourse',
+      playlistId: 'PL-design-course',
+      playlistUrl: 'https://www.youtube.com/@DesignCourse',
       thumbnailUrl: 'https://i.ytimg.com/vi/X-_eMAaPv5I/hqdefault.jpg',
       videoCount: 2,
       videos: [

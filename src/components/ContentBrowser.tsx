@@ -208,8 +208,6 @@ export function ContentBrowser({
 
     if (onPlayInModal) {
       onPlayInModal(directRecord);
-    } else {
-      window.open(directRecord.url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -729,7 +727,6 @@ export function ContentBrowser({
                     <div
                       onClick={() => {
                         if (onPlayInModal) onPlayInModal(record);
-                        else window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
                       }}
                       className="w-full h-40 rounded-xl bg-black/60 overflow-hidden relative mb-3 group-hover:shadow-lg transition-shadow cursor-pointer"
                     >
@@ -789,7 +786,6 @@ export function ContentBrowser({
                     <h3
                       onClick={() => {
                         if (onPlayInModal) onPlayInModal(record);
-                        else window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
                       }}
                       className="text-sm font-bold line-clamp-2 text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors mb-1.5 leading-snug cursor-pointer"
                     >

@@ -44,8 +44,8 @@ export function Sidebar({ activeTab, onTabChange, theme }: SidebarProps) {
             <Zap size={16} className="text-white" />
           </div>
           <div>
-            <span className="font-semibold text-sm">RecTracker</span>
-            <span className={`block text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v0.1.0 MVP</span>
+            <span className="font-semibold text-sm">DevTube</span>
+            <span className={`block text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v1.0.0 Studio</span>
           </div>
         </div>
       </div>

@@ -264,7 +264,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <Zap size={12} className="text-white" />
             </div>
-            <span className="text-sm font-medium">RecTracker</span>
+            <span className="text-sm font-medium">DevTube</span>
           </div>
           <p className="text-xs text-gray-600">
             Privacy-first • Open Source • Built with ❤️
